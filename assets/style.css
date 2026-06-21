@@ -1,0 +1,189 @@
+/* Shared course stylesheet — Tufte-inspired. Every lesson & reference links this. */
+
+:root {
+  --ink: #1a1a1a;
+  --paper: #fffdf8;
+  --faint: #f3efe4;
+  --rule: #d8d2c4;
+  --accent: #b5651d;       /* bitcoin-ish burnt orange */
+  --accent-soft: #f6e6d4;
+  --good: #2e7d4f;
+  --bad: #b3261e;
+  --muted: #6b6356;
+  --mono: "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+  --serif: Palatino, "Palatino Linotype", "Book Antiqua", Georgia, serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 19px;
+  line-height: 1.55;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 4rem 1.5rem 8rem;
+}
+
+.kicker {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 0.4rem;
+}
+
+h1 { font-size: 2.1rem; line-height: 1.15; margin: 0 0 0.4rem; font-weight: 600; }
+h2 { font-size: 1.35rem; margin: 2.6rem 0 0.6rem; font-weight: 600; }
+h3 { font-size: 1.05rem; margin: 1.8rem 0 0.4rem; font-weight: 600; color: var(--muted); }
+
+.subtitle { color: var(--muted); font-style: italic; font-size: 1.1rem; margin-top: 0; }
+
+a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-soft); }
+a:hover { border-bottom-color: var(--accent); }
+
+hr { border: none; border-top: 1px solid var(--rule); margin: 2.5rem 0; }
+
+code { font-family: var(--mono); font-size: 0.82em; background: var(--faint); padding: 0.1em 0.35em; border-radius: 3px; }
+pre { font-family: var(--mono); font-size: 0.8rem; line-height: 1.45; background: #2b2620; color: #f0e9dc; padding: 1rem 1.2rem; border-radius: 6px; overflow-x: auto; }
+pre code { background: none; padding: 0; color: inherit; }
+
+blockquote {
+  margin: 1.4rem 0; padding: 0.4rem 0 0.4rem 1.2rem;
+  border-left: 3px solid var(--accent); color: var(--muted); font-style: italic;
+}
+
+.aside {
+  background: var(--faint); border: 1px solid var(--rule); border-radius: 8px;
+  padding: 1rem 1.3rem; margin: 1.6rem 0; font-size: 0.92rem;
+}
+.aside .label { font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); display: block; margin-bottom: 0.3rem; }
+
+.takeaway {
+  background: var(--accent-soft); border-radius: 8px; padding: 1.1rem 1.3rem; margin: 1.8rem 0;
+}
+.takeaway .label { font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); display: block; margin-bottom: 0.3rem; }
+
+/* Interactive quiz widget */
+.quiz { border: 1px solid var(--rule); border-radius: 8px; padding: 1.3rem 1.4rem; margin: 1.8rem 0; background: #fff; }
+.quiz .q { font-weight: 600; margin-bottom: 0.9rem; }
+.quiz .opt {
+  display: block; width: 100%; text-align: left; font-family: var(--serif); font-size: 0.95rem;
+  background: var(--paper); border: 1px solid var(--rule); border-radius: 6px;
+  padding: 0.6rem 0.9rem; margin: 0.4rem 0; cursor: pointer; transition: all 0.12s;
+}
+.quiz .opt:hover { border-color: var(--accent); }
+.quiz .opt.correct { background: #e3f3e8; border-color: var(--good); color: var(--good); }
+.quiz .opt.wrong { background: #f9e3e1; border-color: var(--bad); color: var(--bad); }
+.quiz .fb { margin-top: 0.8rem; font-size: 0.9rem; min-height: 1.2em; }
+.quiz .fb.show { animation: fade 0.3s; }
+@keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+
+.footer-nav { margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--rule); font-size: 0.9rem; color: var(--muted); }
+.footer-nav a { font-family: var(--mono); font-size: 0.82rem; }
+
+.ask {
+  font-family: var(--mono); font-size: 0.82rem; color: var(--muted);
+  background: var(--faint); border-radius: 6px; padding: 0.7rem 1rem; margin-top: 2.5rem;
+  border-left: 3px solid var(--accent);
+}
+
+.primary-source {
+  border: 1px dashed var(--accent); border-radius: 8px; padding: 1rem 1.3rem; margin: 1.8rem 0;
+}
+.primary-source .label { font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); display: block; margin-bottom: 0.3rem; }
+
+table { border-collapse: collapse; width: 100%; font-size: 0.9rem; margin: 1.4rem 0; }
+th, td { text-align: left; padding: 0.45rem 0.7rem; border-bottom: 1px solid var(--rule); }
+th { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+
+/* ─── Explorable paper: verbatim text + interactive diagrams ─── */
+
+/* Sticky table-of-contents (single-page paper). Floats left on wide screens. */
+.paper-toc {
+  position: fixed; top: 2rem; left: max(1rem, calc(50% - 620px));
+  width: 190px; font-family: var(--mono); font-size: 0.74rem; line-height: 1.5;
+  border-left: 2px solid var(--rule); padding-left: 0.9rem;
+}
+.paper-toc a { display: block; color: var(--muted); border: none; padding: 0.18rem 0; }
+.paper-toc a:hover { color: var(--accent); }
+.paper-toc a.active { color: var(--accent); font-weight: 600; }
+.paper-toc .toc-head { color: var(--accent); letter-spacing: 0.12em; text-transform: uppercase; font-size: 0.66rem; margin-bottom: 0.4rem; }
+@media (max-width: 1180px) { .paper-toc { display: none; } }
+.paper-section { scroll-margin-top: 1.5rem; }
+
+
+.paper-body p { margin: 0 0 1.1rem; }
+.paper-body .secnum { font-family: var(--mono); font-size: 0.8rem; color: var(--accent); letter-spacing: 0.05em; }
+.paper-abstract { background: var(--faint); border-radius: 8px; padding: 1.2rem 1.4rem; font-size: 0.92rem; margin: 1.5rem 0 2.5rem; }
+.paper-abstract .label { font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); display: block; margin-bottom: 0.4rem; }
+
+/* Glossary hover terms */
+.term {
+  border-bottom: 1px dotted var(--accent); cursor: help; color: inherit;
+}
+.term:hover { background: var(--accent-soft); }
+#tooltip {
+  position: fixed; z-index: 50; max-width: 300px; pointer-events: none;
+  background: #2b2620; color: #f4eee2; font-family: var(--serif); font-size: 0.82rem;
+  line-height: 1.4; padding: 0.6rem 0.8rem; border-radius: 6px;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.25); opacity: 0; transition: opacity 0.12s;
+}
+#tooltip .t-term { font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); display: block; margin-bottom: 0.25rem; }
+#tooltip.show { opacity: 1; }
+
+/* Explorable diagram frame + stepper */
+.explorable {
+  border: 1px solid var(--rule); border-radius: 12px; margin: 2rem 0;
+  background: linear-gradient(180deg, #fff, var(--paper)); overflow: hidden;
+}
+.explorable .stage { padding: 0.5rem 0.5rem 0; }
+.explorable svg { width: 100%; height: auto; display: block; }
+.explorable .caption {
+  min-height: 3.2em; padding: 0.9rem 1.4rem; font-size: 0.98rem;
+  border-top: 1px solid var(--rule); background: #fff;
+}
+.explorable .caption .step-label { font-family: var(--mono); font-size: 0.68rem; color: var(--accent); letter-spacing: 0.1em; display: block; margin-bottom: 0.2rem; }
+.explorable .controls {
+  display: flex; align-items: center; gap: 0.8rem; padding: 0.7rem 1.4rem 1rem; background: #fff;
+}
+.explorable .controls button {
+  font-family: var(--mono); font-size: 0.8rem; cursor: pointer;
+  background: var(--ink); color: var(--paper); border: none; border-radius: 6px; padding: 0.45rem 0.9rem;
+  transition: opacity 0.12s;
+}
+.explorable .controls button:hover { opacity: 0.85; }
+.explorable .controls button:disabled { opacity: 0.3; cursor: default; }
+.explorable .controls .replay { background: none; color: var(--muted); border: 1px solid var(--rule); }
+.explorable .dots { display: flex; gap: 0.4rem; margin-left: auto; }
+.explorable .dots i {
+  width: 9px; height: 9px; border-radius: 50%; background: var(--rule); cursor: pointer; transition: background 0.15s, transform 0.15s;
+}
+.explorable .dots i.on { background: var(--accent); transform: scale(1.25); }
+
+/* SVG diagram element styling (Bitcoin Figure 1 reimagined) */
+.dg-card { fill: #fff; stroke: var(--rule); stroke-width: 1.5; }
+.dg-card-head { fill: var(--faint); }
+.dg-label { font-family: var(--mono); font-size: 12px; fill: var(--ink); }
+.dg-sub { font-family: var(--mono); font-size: 10px; fill: var(--muted); }
+.dg-title { font-family: var(--serif); font-weight: 600; font-size: 13px; fill: var(--ink); }
+.dg-key { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.2; }
+.dg-priv { fill: #ece6f5; stroke: #6b4fa0; stroke-width: 1.2; }
+.dg-hash { fill: #e8f0ec; stroke: var(--good); stroke-width: 1.2; }
+.dg-sig { fill: #fbeede; stroke: var(--accent); stroke-width: 1.2; }
+.dg-arrow { fill: none; stroke: var(--muted); stroke-width: 2; }
+.dg-arrow-verify { stroke: var(--good); stroke-dasharray: 5 4; }
+.dg-arrow-sign { stroke: #6b4fa0; }
+.dg-arrow-label { font-family: var(--mono); font-size: 10px; }
+.dg-ghost { fill: #f9e3e1; stroke: var(--bad); stroke-width: 1.5; }
+.dg-bad { fill: var(--bad); font-family: var(--mono); font-size: 12px; }
+
+@media print {
+  body { font-size: 11pt; max-width: none; padding: 0; }
+  .quiz, .ask, .footer-nav, .explorable .controls, .explorable .dots { display: none; }
+  .explorable svg * { opacity: 1 !important; }
+  a { color: var(--ink); border: none; }
+}

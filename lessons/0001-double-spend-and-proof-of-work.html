@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 1 — Double-spend &amp; Proof-of-Work</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<div class="kicker">Lesson 01 · The core insight</div>
+<h1>Double-spend is an <em>ordering</em> problem</h1>
+<p class="subtitle">And proof-of-work is how you agree on an order with no one in charge.</p>
+<hr>
+
+<p>You already know how to <em>own</em> a coin without a bank: a coin is a
+<a href="../reference/glossary.html">chain of digital signatures</a> (§2). Each owner
+signs <code>hash(previous_tx) + next_owner_pubkey</code>. Anyone can verify the
+signature chain. That part needs no trusted third party — public-key crypto does it.</p>
+
+<p>So what's left? <strong>One thing.</strong> The payee cannot verify that an earlier
+owner didn't <em>also</em> sign the very same coin over to someone else. Signatures
+prove authorization; they say nothing about <em>which transfer came first</em>.</p>
+
+<div class="takeaway">
+  <span class="label">Reframe</span>
+  Double-spending isn't a cryptography problem — it's a <strong>distributed
+  ordering / agreement</strong> problem. You need everyone to agree on a single
+  history of which transaction happened first. A mint solves this by being the one
+  authority that orders things. Nakamoto's whole job is to get that ordering
+  <em>without</em> the authority.
+</div>
+
+<p>The naive fix — "announce every transaction publicly, payees accept the
+majority's view of first-seen" — fails: in an open network you can't enumerate the
+participants, and identities are free to mint (Sybil). Majority-by-headcount is
+meaningless. So the paper makes one move:</p>
+
+<blockquote>"The majority decision is represented by the longest chain, which has the
+greatest proof-of-work effort invested in it… one CPU one vote." (§4)</blockquote>
+
+<p>Voting weight = <strong>computational work</strong>, not identities. Sybil attacks
+become pointless because spinning up a million fake nodes adds zero hashes.</p>
+
+<h2>What proof-of-work actually is</h2>
+<p>Pick a <em>target</em>. Hash the <a href="../reference/glossary.html">block header</a>
+(prev-block-hash, Merkle root of txns, timestamp, target, nonce). If
+<code>SHA-256(header) &lt; target</code>, the block is valid; otherwise bump the
+<code>nonce</code> and try again. Because SHA-256 output is effectively uniform random,
+the <em>only</em> strategy is brute force. Verification is a single hash. This asymmetry
+— expensive to make, trivial to check — is the entire engine.</p>
+
+<div class="aside">
+  <span class="label">Why it chains history</span>
+  The header includes the <em>previous block's hash</em>. So redoing block <em>n</em>
+  changes its hash, which invalidates block <em>n+1</em>'s "prev-hash", which
+  invalidates <em>n+2</em>… To rewrite one old block you must redo its proof-of-work
+  <strong>and every block after it</strong>. History is welded together by work.
+</div>
+
+<h2>The security claim, stated honestly</h2>
+<p>An attacker who wants to reverse a payment must out-pace the honest chain: build a
+secret alternative branch from before their transaction and make it longer. This is a
+race between the attacker's hash rate <code>q</code> and the honest network's
+<code>p</code> (with <code>p + q = 1</code>). If <code>p &gt; q</code>, every
+honest block the attacker has to catch up on makes the gap, on expectation, grow — the
+catch-up probability <strong>falls roughly exponentially</strong> in the number of
+confirmations <code>z</code> (§11 — we'll derive the Poisson formula next lesson).</p>
+
+<div class="takeaway">
+  <span class="label">The shape of it</span>
+  Bitcoin's security is <strong>economic and probabilistic, not absolute</strong>.
+  There is no point at which a payment is mathematically final — only a point where
+  reversing it costs more energy than it's worth. "6 confirmations" is a
+  risk threshold, not a proof.
+</div>
+
+<div class="quiz" id="quiz">
+  <div class="q">1. Signatures alone don't prevent double-spending because they…</div>
+  <button class="opt" data-correct="false">cannot be verified by an offline payee node</button>
+  <button class="opt" data-correct="true">prove authorization but not the ordering of transfers</button>
+  <button class="opt" data-correct="false">can be forged by anyone holding the public key</button>
+  <button class="opt" data-correct="false">expire once the coin changes ownership once</button>
+  <div class="fb"></div>
+</div>
+
+<div class="quiz" id="quiz2">
+  <div class="q">2. Proof-of-work resists Sybil attacks because voting weight scales with…</div>
+  <button class="opt" data-correct="false">the total number of distinct network nodes</button>
+  <button class="opt" data-correct="false">how long an identity has been on the network</button>
+  <button class="opt" data-correct="true">hash power invested, which fake identities don't add</button>
+  <button class="opt" data-correct="false">the quantity of coins each participant holds</button>
+  <div class="fb"></div>
+</div>
+
+<div class="quiz" id="quiz3">
+  <div class="q">3. Rewriting one old block forces an attacker to redo work for…</div>
+  <button class="opt" data-correct="false">that single block, then rebroadcast it once</button>
+  <button class="opt" data-correct="false">the two blocks on either side of the target</button>
+  <button class="opt" data-correct="true">that block and every block built on top of it</button>
+  <button class="opt" data-correct="false">a random subset chosen by the longest chain</button>
+  <div class="fb"></div>
+</div>
+
+<div class="primary-source">
+  <span class="label">Primary source — read this</span>
+  Nakamoto (2008), <a href="https://bitcoin.org/bitcoin.pdf"><em>Bitcoin: A Peer-to-Peer
+  Electronic Cash System</em></a>, <strong>§§1–5</strong> (Introduction → Network).
+  ~2 pages. Notice how little text it takes to state the whole idea.
+</div>
+
+<div class="ask">
+  <strong>I'm your teacher — ask me anything.</strong> e.g. "Why longest chain rather
+  than most-blocks?", "What stops two valid blocks at the same height?", or "How does
+  this map to Byzantine agreement / FLP?" Next lesson: deriving the §11 attacker-catch-up
+  probability and the Poisson approximation.
+</div>
+
+<div class="footer-nav">
+  <a href="../index.html">The Explorable Paper</a> &nbsp;·&nbsp;
+  <a href="../reference/glossary.html">Glossary</a>
+</div>
+
+<script>
+document.querySelectorAll('.quiz').forEach(function(q){
+  var fb = q.querySelector('.fb');
+  q.querySelectorAll('.opt').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      q.querySelectorAll('.opt').forEach(function(b){ b.disabled = true; });
+      var ok = btn.dataset.correct === 'true';
+      btn.classList.add(ok ? 'correct' : 'wrong');
+      if (!ok) q.querySelector('.opt[data-correct="true"]').classList.add('correct');
+      fb.classList.add('show');
+      fb.textContent = ok
+        ? '✓ Right — ordering is the whole game.'
+        : '✗ The defining gap is ordering: signatures authorize, they don’t sequence.';
+    });
+  });
+});
+</script>
+</body>
+</html>

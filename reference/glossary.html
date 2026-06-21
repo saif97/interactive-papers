@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Glossary — Bitcoin Whitepaper</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<div class="kicker">Reference · Glossary</div>
+<h1>Bitcoin Whitepaper — Glossary</h1>
+<p class="subtitle">Canonical terms. Every lesson uses these exact definitions.</p>
+<hr>
+
+<table>
+<thead><tr><th>Term</th><th>Definition</th></tr></thead>
+<tbody>
+<tr><td><strong>Coin</strong></td><td>A <em>chain of digital signatures</em>. Each owner transfers it by signing a hash of the previous transaction + the next owner's public key (§2).</td></tr>
+<tr><td><strong>Double-spend</strong></td><td>Spending the same coin twice. The core problem; without a coordinator, the only defense is a single agreed-upon <em>order</em> of transactions (§1, §11).</td></tr>
+<tr><td><strong>Trusted third party</strong></td><td>A mint/bank that orders transactions. Bitcoin's goal is to remove it. (§1)</td></tr>
+<tr><td><strong>Timestamp server</strong></td><td>Conceptual ancestor of the chain: hashes a block of items + the previous timestamp, publishing the hash. Each timestamp reinforces the ones before it (§3).</td></tr>
+<tr><td><strong>Proof-of-work (PoW)</strong></td><td>Find a nonce so that <code>SHA-256(block header)</code> &lt; target (i.e. begins with enough zero bits). Costly to produce, trivial to verify (§4).</td></tr>
+<tr><td><strong>Nonce</strong></td><td>The field in the header miners increment while searching for a valid hash (§4).</td></tr>
+<tr><td><strong>Target / bits</strong></td><td>The threshold a hash must fall under. Adjusted (retargeted) to keep block production ≈ <strong>10 min</strong> on average (§4).</td></tr>
+<tr><td><strong>Longest chain</strong></td><td>The chain with the <em>most cumulative proof-of-work</em> (not most blocks). Treated as the truth; nodes always extend it (§4, §5).</td></tr>
+<tr><td><strong>Block header</strong></td><td><strong>80 bytes</strong>: prev-hash, Merkle root, timestamp, target bits, nonce (§7).</td></tr>
+<tr><td><strong>Merkle tree</strong></td><td>Binary hash tree over a block's transactions; only the <strong>Merkle root</strong> sits in the header. Lets old spent txns be pruned and enables SPV (§7).</td></tr>
+<tr><td><strong>SPV</strong></td><td>Simplified Payment Verification: verify a payment with only block headers + a Merkle branch, without running a full node (§8).</td></tr>
+<tr><td><strong>Coinbase</strong></td><td>The first transaction in a block; mints the block subsidy (initially <strong>50 BTC</strong>) + fees to the miner. The minting + incentive mechanism (§6).</td></tr>
+<tr><td><strong>q / p</strong></td><td>Attacker's vs honest network's share of hash power, <code>p + q = 1</code>. Security holds while <code>p &gt; q</code> (§11).</td></tr>
+<tr><td><strong>z</strong></td><td>Number of confirmations — blocks built atop the one containing your transaction. Catch-up probability falls ~exponentially in <code>z</code> (§11).</td></tr>
+</tbody>
+</table>
+
+<div class="ask">Something here feel off or under-defined? Ask your teacher — definitions get revised as your model sharpens.</div>
+
+<div class="footer-nav">
+  <a href="../lessons/0001-double-spend-and-proof-of-work.html">→ Lesson 1: Double-spend &amp; proof-of-work</a>
+</div>
+</body>
+</html>

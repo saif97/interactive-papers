@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bitcoin: A Peer-to-Peer Electronic Cash System — Explorable</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<nav class="paper-toc" aria-label="Contents">
+  <div class="toc-head">The Paper</div>
+  <a href="#sec-abstract">Abstract</a>
+  <a href="#sec-1">1 · Introduction</a>
+  <a href="#sec-2">2 · Transactions</a>
+  <a href="#sec-3">3 · Timestamp Server</a>
+  <a href="#sec-4">4 · Proof-of-Work</a>
+  <a href="#sec-5">5 · Network</a>
+  <a href="#sec-6">6 · Incentive</a>
+  <a href="#sec-7">7 · Reclaiming Disk Space</a>
+  <a href="#sec-8">8 · Simplified Payment Verification</a>
+  <a href="#sec-9">9 · Combining &amp; Splitting Value</a>
+  <a href="#sec-10">10 · Privacy</a>
+  <a href="#sec-11">11 · Calculations</a>
+  <a href="#sec-12">12 · Conclusion</a>
+</nav>
+
+<div class="kicker">Explorable Paper · Verbatim text + interactive diagrams</div>
+<h1>Bitcoin: A Peer-to-Peer Electronic Cash System</h1>
+<p class="subtitle">Satoshi Nakamoto — the full paper, word for word. The diagrams are ours: step through them, mine a real block, run the attack math. Hover any <span class="term" data-term="hash">dotted term</span> for a definition.</p>
+
+<section class="paper-section" id="sec-abstract">
+<div class="paper-abstract">
+  <span class="label">Abstract</span>
+  A purely peer-to-peer version of electronic cash would allow online payments to be sent directly from one party to another without going through a financial institution. <span class="term" data-term="digital-signatures">Digital signatures</span> provide part of the solution, but the main benefits are lost if a <span class="term" data-term="trusted-third-party">trusted third party</span> is still required to prevent double-spending. We propose a solution to the <span class="term" data-term="double-spending">double-spending</span> problem using a peer-to-peer network. The network timestamps transactions by hashing them into an ongoing chain of hash-based <span class="term" data-term="proof-of-work">proof-of-work</span>, forming a record that cannot be changed without redoing the proof-of-work. The <span class="term" data-term="longest-chain">longest chain</span> not only serves as proof of the sequence of events witnessed, but proof that it came from the largest pool of <span class="term" data-term="cpu-power">CPU power</span>. As long as a majority of CPU power is controlled by nodes that are not cooperating to attack the network, they'll generate the longest chain and outpace attackers. The network itself requires minimal structure. Messages are broadcast on a best effort basis, and nodes can leave and rejoin the network at will, accepting the longest proof-of-work chain as proof of what happened while they were gone.
+</div>
+</section>
+
+<div class="paper-body">
+
+<section class="paper-section" id="sec-1">
+<h2><span class="secnum">1.</span> Introduction</h2>
+<p>Commerce on the Internet has come to rely almost exclusively on financial institutions serving as <span class="term" data-term="trusted-third-party">trusted third parties</span> to process electronic payments. While the system works well enough for most transactions, it still suffers from the inherent weaknesses of the trust based model. Completely non-reversible transactions are not really possible, since financial institutions cannot avoid mediating disputes. The cost of mediation increases transaction costs, limiting the minimum practical transaction size and cutting off the possibility for small casual transactions, and there is a broader cost in the loss of ability to make non-reversible payments for non-reversible services. With the possibility of reversal, the need for trust spreads. Merchants must be wary of their customers, hassling them for more information than they would otherwise need. A certain percentage of fraud is accepted as unavoidable. These costs and payment uncertainties can be avoided in person by using physical currency, but no mechanism exists to make payments over a communications channel without a trusted party.</p>
+<p>What is needed is an electronic payment system based on cryptographic proof instead of trust, allowing any two willing parties to transact directly with each other without the need for a trusted third party. Transactions that are computationally impractical to reverse would protect sellers from fraud, and routine escrow mechanisms could easily be implemented to protect buyers. In this paper, we propose a solution to the <span class="term" data-term="double-spending">double-spending</span> problem using a peer-to-peer distributed <span class="term" data-term="timestamp-server">timestamp server</span> to generate computational proof of the chronological order of transactions. The system is secure as long as honest nodes collectively control more <span class="term" data-term="cpu-power">CPU power</span> than any cooperating group of attacker nodes.</p>
+</section>
+
+<section class="paper-section" id="sec-2">
+<h2><span class="secnum">2.</span> Transactions</h2>
+<p>We define an <span class="term" data-term="electronic-coin">electronic coin</span> as a chain of <span class="term" data-term="digital-signatures">digital signatures</span>. Each owner transfers the coin to the next by digitally signing a <span class="term" data-term="hash">hash</span> of the previous transaction and the <span class="term" data-term="public-key">public key</span> of the next owner and adding these to the end of the coin. A payee can verify the signatures to verify the chain of ownership.</p>
+
+<figure class="explorable" id="fig1" aria-label="Interactive: the transaction chain">
+  <div class="stage">
+    <svg viewBox="0 0 960 470" role="img">
+      <defs>
+        <marker id="ah" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#6b6356"/></marker>
+        <marker id="ah-v" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#2e7d4f"/></marker>
+        <marker id="ah-s" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#6b4fa0"/></marker>
+        <marker id="ah-bad" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#b3261e"/></marker>
+      </defs>
+      <g id="g-main">
+        <g id="g1">
+          <rect class="dg-card" x="40" y="64" width="210" height="200" rx="8"/>
+          <rect class="dg-card dg-card-head" x="40" y="64" width="210" height="28" rx="8"/>
+          <rect class="dg-card-head" x="40" y="80" width="210" height="12"/>
+          <text class="dg-title" x="145" y="83" text-anchor="middle">Transaction 1</text>
+          <rect class="dg-key" x="52" y="100" width="186" height="34" rx="5"/>
+          <text class="dg-label" x="145" y="121" text-anchor="middle">Owner 1's Public Key</text>
+          <rect class="dg-hash" x="52" y="146" width="186" height="30" rx="5"/>
+          <text class="dg-label" x="145" y="165" text-anchor="middle">Hash</text>
+          <rect class="dg-sig" x="52" y="188" width="186" height="40" rx="5"/>
+          <text class="dg-label" x="145" y="206" text-anchor="middle">Owner 0's</text>
+          <text class="dg-label" x="145" y="220" text-anchor="middle">Signature</text>
+        </g>
+        <g id="pk1priv">
+          <rect class="dg-priv" x="52" y="336" width="186" height="40" rx="5"/>
+          <text class="dg-label" x="145" y="354" text-anchor="middle">Owner 1's</text>
+          <text class="dg-label" x="145" y="368" text-anchor="middle">Private Key</text>
+        </g>
+        <g id="c2-frame">
+          <rect class="dg-card" x="375" y="64" width="210" height="200" rx="8"/>
+          <rect class="dg-card dg-card-head" x="375" y="64" width="210" height="28" rx="8"/>
+          <rect class="dg-card-head" x="375" y="80" width="210" height="12"/>
+          <text class="dg-title" x="480" y="83" text-anchor="middle">Transaction 2</text>
+        </g>
+        <g id="c2-pk"><rect class="dg-key" x="387" y="100" width="186" height="34" rx="5"/><text class="dg-label" x="480" y="121" text-anchor="middle">Owner 2's Public Key</text></g>
+        <g id="c2-hash"><rect class="dg-hash" x="387" y="146" width="186" height="30" rx="5"/><text class="dg-label" x="480" y="165" text-anchor="middle">Hash</text></g>
+        <g id="c2-sig"><rect class="dg-sig" x="387" y="188" width="186" height="40" rx="5"/><text class="dg-label" x="480" y="206" text-anchor="middle">Owner 1's</text><text class="dg-label" x="480" y="220" text-anchor="middle">Signature</text></g>
+        <g id="linkA"><path class="dg-arrow" d="M250,161 C310,161 330,161 385,161" marker-end="url(#ah)"/><text class="dg-arrow-label dg-sub" x="300" y="153" text-anchor="middle">prev. tx</text></g>
+        <g id="linkB"><path class="dg-arrow" d="M480,134 L480,144" marker-end="url(#ah)"/><text class="dg-arrow-label dg-sub" x="540" y="142" text-anchor="middle">+ next pubkey</text></g>
+        <g id="arrow-sign1"><path class="dg-arrow dg-arrow-sign" d="M180,336 C230,300 320,250 386,212" marker-end="url(#ah-s)"/><text class="dg-arrow-label" x="300" y="300" fill="#6b4fa0">Sign</text></g>
+        <g id="arrow-verify1"><path class="dg-arrow dg-arrow-verify" d="M385,205 C330,235 305,235 252,212" marker-end="url(#ah-v)"/><text class="dg-arrow-label" x="318" y="252" fill="#2e7d4f">Verify</text></g>
+        <g id="g3">
+          <rect class="dg-card" x="710" y="64" width="210" height="200" rx="8"/>
+          <rect class="dg-card dg-card-head" x="710" y="64" width="210" height="28" rx="8"/>
+          <rect class="dg-card-head" x="710" y="80" width="210" height="12"/>
+          <text class="dg-title" x="815" y="83" text-anchor="middle">Transaction 3</text>
+          <rect class="dg-key" x="722" y="100" width="186" height="34" rx="5"/><text class="dg-label" x="815" y="121" text-anchor="middle">Owner 3's Public Key</text>
+          <rect class="dg-hash" x="722" y="146" width="186" height="30" rx="5"/><text class="dg-label" x="815" y="165" text-anchor="middle">Hash</text>
+          <rect class="dg-sig" x="722" y="188" width="186" height="40" rx="5"/><text class="dg-label" x="815" y="206" text-anchor="middle">Owner 2's</text><text class="dg-label" x="815" y="220" text-anchor="middle">Signature</text>
+          <rect class="dg-priv" x="387" y="336" width="186" height="40" rx="5"/><text class="dg-label" x="480" y="354" text-anchor="middle">Owner 2's</text><text class="dg-label" x="480" y="368" text-anchor="middle">Private Key</text>
+          <path class="dg-arrow dg-arrow-sign" d="M515,336 C565,300 655,250 721,212" marker-end="url(#ah-s)"/><text class="dg-arrow-label" x="635" y="300" fill="#6b4fa0">Sign</text>
+          <path class="dg-arrow dg-arrow-verify" d="M720,205 C665,235 640,235 587,212" marker-end="url(#ah-v)"/><text class="dg-arrow-label" x="653" y="252" fill="#2e7d4f">Verify</text>
+        </g>
+      </g>
+      <g id="g-ghost">
+        <path class="dg-arrow" stroke="#b3261e" stroke-dasharray="5 4" d="M145,264 C145,300 150,400 250,408" marker-end="url(#ah-bad)"/>
+        <rect class="dg-ghost" x="270" y="388" width="210" height="44" rx="6"/>
+        <text class="dg-label" x="375" y="406" text-anchor="middle" fill="#b3261e">Owner X's Public Key</text>
+        <text class="dg-sub" x="375" y="422" text-anchor="middle" fill="#b3261e">(same coin, signed again?)</text>
+        <text class="dg-bad" x="60" y="420">double-spend?</text>
+      </g>
+    </svg>
+  </div>
+  <figcaption class="caption"></figcaption>
+  <div class="controls"><button data-prev>← Prev</button><button data-next>Next →</button><button class="replay" data-replay>↺ Replay</button><div class="dots"></div></div>
+</figure>
+
+<p>The problem of course is the payee can't verify that one of the owners did not double-spend the coin. A common solution is to introduce a trusted central authority, or <span class="term" data-term="mint">mint</span>, that checks every transaction for double spending. After each transaction, the coin must be returned to the mint to issue a new coin, and only coins issued directly from the mint are trusted not to be double-spent. The problem with this solution is that the fate of the entire money system depends on the company running the mint, with every transaction having to go through them, just like a bank.</p>
+<p>We need a way for the payee to know that the previous owners did not sign any earlier transactions. For our purposes, the earliest transaction is the one that counts, so we don't care about later attempts to double-spend. The only way to confirm the absence of a transaction is to be aware of all transactions. In the mint based model, the mint was aware of all transactions and decided which arrived first. To accomplish this without a trusted party, transactions must be publicly announced [1], and we need a system for participants to agree on a single history of the order in which they were received. The payee needs proof that at the time of each transaction, the majority of nodes agreed it was the first received.</p>
+</section>
+
+<section class="paper-section" id="sec-3">
+<h2><span class="secnum">3.</span> Timestamp Server</h2>
+<p>The solution we propose begins with a <span class="term" data-term="timestamp-server">timestamp server</span>. A timestamp server works by taking a <span class="term" data-term="hash">hash</span> of a block of items to be timestamped and widely publishing the hash, such as in a newspaper or Usenet post [2-5]. The timestamp proves that the data must have existed at the time, obviously, in order to get into the hash. Each timestamp includes the previous timestamp in its hash, forming a chain, with each additional timestamp reinforcing the ones before it.</p>
+
+<figure class="explorable" id="fig-ts">
+  <div class="stage">
+    <svg viewBox="0 0 960 320" role="img">
+      <defs>
+        <marker id="ts-ah" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#6b6356"/></marker>
+        <marker id="ts-bad" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#b3261e"/></marker>
+      </defs>
+      <g id="ts-main">
+        <g id="ts-b1">
+          <rect class="dg-hash" x="40" y="40" width="170" height="34" rx="5"/><text class="dg-label" id="ts-h1" x="125" y="62" text-anchor="middle">Hash → a1f9…</text>
+          <rect class="dg-card" x="40" y="86" width="170" height="120" rx="6"/><text class="dg-title" x="125" y="108" text-anchor="middle">Block</text>
+          <rect class="dg-key" x="56" y="120" width="64" height="32" rx="4"/><text class="dg-sub" x="88" y="140" text-anchor="middle">Item</text>
+          <rect class="dg-key" x="130" y="120" width="64" height="32" rx="4"/><text class="dg-sub" x="162" y="140" text-anchor="middle">Item</text>
+          <text class="dg-sub" x="125" y="180" text-anchor="middle">…</text>
+        </g>
+        <g id="ts-b2">
+          <rect class="dg-hash" x="320" y="40" width="170" height="34" rx="5"/><text class="dg-label" id="ts-h2" x="405" y="62" text-anchor="middle">Hash → 7c30…</text>
+          <rect class="dg-card" x="320" y="86" width="170" height="120" rx="6"/><text class="dg-title" x="405" y="108" text-anchor="middle">Block</text>
+          <rect class="dg-sig" x="336" y="120" width="138" height="26" rx="4"/><text class="dg-sub" x="405" y="138" text-anchor="middle">prev. hash a1f9…</text>
+          <rect class="dg-key" x="336" y="152" width="64" height="28" rx="4"/><text class="dg-sub" x="368" y="170" text-anchor="middle">Item</text>
+          <rect class="dg-key" x="410" y="152" width="64" height="28" rx="4"/><text class="dg-sub" x="442" y="170" text-anchor="middle">Item</text>
+        </g>
+        <g id="ts-b3">
+          <rect class="dg-hash" x="600" y="40" width="170" height="34" rx="5"/><text class="dg-label" x="685" y="62" text-anchor="middle">Hash → e0b2…</text>
+          <rect class="dg-card" x="600" y="86" width="170" height="120" rx="6"/><text class="dg-title" x="685" y="108" text-anchor="middle">Block</text>
+          <rect class="dg-sig" x="616" y="120" width="138" height="26" rx="4"/><text class="dg-sub" x="685" y="138" text-anchor="middle">prev. hash 7c30…</text>
+          <rect class="dg-key" x="616" y="152" width="64" height="28" rx="4"/><text class="dg-sub" x="648" y="170" text-anchor="middle">Item</text>
+          <rect class="dg-key" x="690" y="152" width="64" height="28" rx="4"/><text class="dg-sub" x="722" y="170" text-anchor="middle">Item</text>
+        </g>
+        <path id="ts-link1" class="dg-arrow" d="M210,133 C260,133 280,133 318,133" marker-end="url(#ts-ah)"/>
+        <path id="ts-link2" class="dg-arrow" d="M490,133 C540,133 560,133 598,133" marker-end="url(#ts-ah)"/>
+      </g>
+      <g id="ts-tamper">
+        <text class="dg-bad" x="88" y="250" text-anchor="middle">tampered!</text>
+        <path class="dg-arrow" stroke="#b3261e" d="M88,150 C88,230 88,235 100,242" marker-end="url(#ts-bad)"/>
+        <text class="dg-bad" x="405" y="285" text-anchor="middle">…every hash downstream no longer matches.</text>
+      </g>
+    </svg>
+  </div>
+  <figcaption class="caption"></figcaption>
+  <div class="controls"><button data-prev>← Prev</button><button data-next>Next →</button><button class="replay" data-replay>↺ Replay</button><div class="dots"></div></div>
+</figure>
+</section>
+
+<section class="paper-section" id="sec-4">
+<h2><span class="secnum">4.</span> Proof-of-Work</h2>
+<p>To implement a distributed timestamp server on a peer-to-peer basis, we will need to use a <span class="term" data-term="proof-of-work">proof-of-work</span> system similar to Adam Back's <span class="term" data-term="hashcash">Hashcash</span> [6], rather than newspaper or Usenet posts. The proof-of-work involves scanning for a value that when hashed, such as with SHA-256, the hash begins with a number of zero bits. The average work required is exponential in the number of zero bits required and can be verified by executing a single hash.</p>
+<p>For our timestamp network, we implement the proof-of-work by incrementing a <span class="term" data-term="nonce">nonce</span> in the block until a value is found that gives the block's hash the required zero bits. Once the CPU effort has been expended to make it satisfy the proof-of-work, the block cannot be changed without redoing the work. As later blocks are chained after it, the work to change the block would include redoing all the blocks after it.</p>
+
+<div class="explorable" id="miner">
+  <div class="caption" style="border-top:none;border-bottom:1px solid var(--rule)"><span class="step-label">Live miner · real SHA-256 in your browser</span>Pick a difficulty and press <b>Mine</b>. The browser increments the nonce and hashes the block over and over until the hash starts with the required number of zeros. Verifying the answer is one hash; finding it is millions.</div>
+  <div style="padding:1.1rem 1.4rem;font-family:var(--mono);font-size:0.85rem">
+    <div style="margin-bottom:0.6rem">block data: <code>"Owner1 → Owner2 : 1 coin"</code> · prev hash: <code>00000a1f9c…</code></div>
+    <div style="margin-bottom:0.6rem">difficulty (leading zeros):
+      <select id="m-diff"><option value="1">1</option><option value="2">2</option><option value="3" selected>3</option><option value="4">4</option><option value="5">5</option></select>
+      <button id="m-go" style="font-family:var(--mono);background:var(--ink);color:var(--paper);border:none;border-radius:6px;padding:0.35rem 0.9rem;cursor:pointer">Mine ⛏</button>
+      <button id="m-stop" style="font-family:var(--mono);background:none;color:var(--muted);border:1px solid var(--rule);border-radius:6px;padding:0.35rem 0.9rem;cursor:pointer" disabled>Stop</button>
+    </div>
+    <div>nonce: <b id="m-nonce">0</b> &nbsp;·&nbsp; tries: <b id="m-tries">0</b> &nbsp;·&nbsp; <b id="m-rate">0</b> H/s</div>
+    <div style="margin-top:0.5rem;word-break:break-all">SHA-256: <span id="m-hash" style="color:var(--muted)">—</span></div>
+    <div id="m-status" style="margin-top:0.5rem;font-family:var(--serif);min-height:1.4em"></div>
+  </div>
+</div>
+
+<p>The proof-of-work also solves the problem of determining representation in majority decision making. If the majority were based on one-IP-address-one-vote, it could be subverted by anyone able to allocate many IPs. Proof-of-work is essentially <span class="term" data-term="one-cpu-one-vote">one-CPU-one-vote</span>. The majority decision is represented by the <span class="term" data-term="longest-chain">longest chain</span>, which has the greatest proof-of-work effort invested in it. If a majority of CPU power is controlled by honest nodes, the honest chain will grow the fastest and outpace any competing chains. To modify a past block, an attacker would have to redo the proof-of-work of the block and all blocks after it and then catch up with and surpass the work of the honest nodes. We will show later that the probability of a slower attacker catching up diminishes exponentially as subsequent blocks are added.</p>
+<p>To compensate for increasing hardware speed and varying interest in running nodes over time, the proof-of-work <span class="term" data-term="difficulty">difficulty</span> is determined by a moving average targeting an average number of blocks per hour. If they're generated too fast, the difficulty increases.</p>
+</section>
+
+<section class="paper-section" id="sec-5">
+<h2><span class="secnum">5.</span> Network</h2>
+<p>The steps to run the network are as follows:</p>
+<ol>
+  <li>New transactions are broadcast to all nodes.</li>
+  <li>Each node collects new transactions into a block.</li>
+  <li>Each node works on finding a difficult proof-of-work for its block.</li>
+  <li>When a node finds a proof-of-work, it broadcasts the block to all nodes.</li>
+  <li>Nodes accept the block only if all transactions in it are valid and not already spent.</li>
+  <li>Nodes express their acceptance of the block by working on creating the next block in the chain, using the hash of the accepted block as the previous hash.</li>
+</ol>
+
+<figure class="explorable" id="fig-net">
+  <div class="stage">
+    <svg viewBox="0 0 960 340" role="img">
+      <defs><marker id="net-ah" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#b5651d"/></marker></defs>
+      <g id="net-nodes">
+        <circle class="net-node" cx="160" cy="170" r="34" fill="#fff" stroke="#d8d2c4" stroke-width="2"/><text class="dg-sub" x="160" y="174" text-anchor="middle">node</text>
+        <circle class="net-node" cx="480" cy="80" r="34" fill="#fff" stroke="#d8d2c4" stroke-width="2"/><text class="dg-sub" x="480" y="84" text-anchor="middle">node</text>
+        <circle class="net-node" cx="800" cy="170" r="34" fill="#fff" stroke="#d8d2c4" stroke-width="2"/><text class="dg-sub" x="800" y="174" text-anchor="middle">node</text>
+        <circle class="net-node" cx="330" cy="280" r="34" fill="#fff" stroke="#d8d2c4" stroke-width="2"/><text class="dg-sub" x="330" y="284" text-anchor="middle">node</text>
+        <circle class="net-node" cx="630" cy="280" r="34" fill="#fff" stroke="#d8d2c4" stroke-width="2"/><text class="dg-sub" x="630" y="284" text-anchor="middle">node</text>
+        <line class="net-edge" x1="160" y1="170" x2="480" y2="80" stroke="#eadfce" stroke-width="2"/>
+        <line class="net-edge" x1="480" y1="80" x2="800" y2="170" stroke="#eadfce" stroke-width="2"/>
+        <line class="net-edge" x1="160" y1="170" x2="330" y2="280" stroke="#eadfce" stroke-width="2"/>
+        <line class="net-edge" x1="330" y1="280" x2="630" y2="280" stroke="#eadfce" stroke-width="2"/>
+        <line class="net-edge" x1="630" y1="280" x2="800" y2="170" stroke="#eadfce" stroke-width="2"/>
+        <line class="net-edge" x1="480" y1="80" x2="630" y2="280" stroke="#eadfce" stroke-width="2"/>
+        <line class="net-edge" x1="480" y1="80" x2="330" y2="280" stroke="#eadfce" stroke-width="2"/>
+      </g>
+      <g id="net-tx" opacity="0"><circle cx="160" cy="170" r="12" fill="#b5651d"/><text class="dg-sub" x="160" y="130" text-anchor="middle" fill="#b5651d">new tx</text></g>
+      <g id="net-broadcast" opacity="0">
+        <path class="dg-arrow" stroke="#b5651d" d="M188,158 L452,92" marker-end="url(#net-ah)"/>
+        <path class="dg-arrow" stroke="#b5651d" d="M188,182 L302,268" marker-end="url(#net-ah)"/>
+      </g>
+      <g id="net-pow" opacity="0"><text class="dg-bad" x="480" y="44" text-anchor="middle" fill="#2e7d4f">⛏ found PoW!</text></g>
+      <g id="net-blockcast" opacity="0">
+        <path class="dg-arrow" stroke="#2e7d4f" d="M452,92 L190,160" marker-end="url(#net-ah)"/>
+        <path class="dg-arrow" stroke="#2e7d4f" d="M508,92 L772,160" marker-end="url(#net-ah)"/>
+        <path class="dg-arrow" stroke="#2e7d4f" d="M480,114 L630,250" marker-end="url(#net-ah)"/>
+        <path class="dg-arrow" stroke="#2e7d4f" d="M470,114 L335,250" marker-end="url(#net-ah)"/>
+      </g>
+      <g id="net-accept" opacity="0"><text class="dg-sub" x="480" y="320" text-anchor="middle" fill="#2e7d4f">all nodes now extend this block ↻</text></g>
+    </svg>
+  </div>
+  <figcaption class="caption"></figcaption>
+  <div class="controls"><button data-prev>← Prev</button><button data-next>Next →</button><button class="replay" data-replay>↺ Replay</button><div class="dots"></div></div>
+</figure>
+
+<p>Nodes always consider the longest chain to be the correct one and will keep working on extending it. If two nodes broadcast different versions of the next block simultaneously, some nodes may receive one or the other first. In that case, they work on the first one they received, but save the other branch in case it becomes longer. The tie will be broken when the next proof-of-work is found and one branch becomes longer; the nodes that were working on the other branch will then switch to the longer one.</p>
+<p>New transaction broadcasts do not necessarily need to reach all nodes. As long as they reach many nodes, they will get into a block before long. Block broadcasts are also tolerant of dropped messages. If a node does not receive a block, it will request it when it receives the next block and realizes it missed one.</p>
+</section>
+
+<section class="paper-section" id="sec-6">
+<h2><span class="secnum">6.</span> Incentive</h2>
+<p>By convention, the first transaction in a block is a special transaction that starts a new coin owned by the creator of the block. This adds an <span class="term" data-term="incentive">incentive</span> for nodes to support the network, and provides a way to initially distribute coins into circulation, since there is no central authority to issue them. The steady addition of a constant of amount of new coins is analogous to gold miners expending resources to add gold to circulation. In our case, it is CPU time and electricity that is expended.</p>
+<p>The incentive can also be funded with <span class="term" data-term="transaction-fee">transaction fees</span>. If the output value of a transaction is less than its input value, the difference is a transaction fee that is added to the incentive value of the block containing the transaction. Once a predetermined number of coins have entered circulation, the incentive can transition entirely to transaction fees and be completely inflation free.</p>
+<p>The incentive may help encourage nodes to stay honest. If a greedy attacker is able to assemble more CPU power than all the honest nodes, he would have to choose between using it to defraud people by stealing back his payments, or using it to generate new coins. He ought to find it more profitable to play by the rules, such rules that favour him with more new coins than everyone else combined, than to undermine the system and the validity of his own wealth.</p>
+<div class="aside"><span class="label">The honest-greed argument</span> Note the structure of the last paragraph: it's a <b>game-theoretic</b> claim, not a cryptographic one. Security ultimately rests on the assumption that out-earning everyone is more attractive than burning your own wealth's credibility. Worth poking at — ask your teacher.</div>
+</section>
+
+<section class="paper-section" id="sec-7">
+<h2><span class="secnum">7.</span> Reclaiming Disk Space</h2>
+<p>Once the latest transaction in a coin is buried under enough blocks, the spent transactions before it can be discarded to save disk space. To facilitate this without breaking the block's hash, transactions are hashed in a <span class="term" data-term="merkle-tree">Merkle Tree</span> [7][2][5], with only the <span class="term" data-term="merkle-root">root</span> included in the block's hash. Old blocks can then be compacted by stubbing off branches of the tree. The interior hashes do not need to be stored.</p>
+
+<figure class="explorable" id="fig-merkle">
+  <div class="stage">
+    <svg viewBox="0 0 960 380" role="img">
+      <defs><marker id="mk-ah" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#6b6356"/></marker></defs>
+      <rect class="dg-card dg-card-head" x="330" y="20" width="300" height="56" rx="6"/>
+      <text class="dg-title" x="480" y="40" text-anchor="middle">Block Header (Block Hash)</text>
+      <rect class="dg-sig" x="346" y="46" width="120" height="24" rx="4"/><text class="dg-sub" x="406" y="62" text-anchor="middle">Prev Hash · Nonce</text>
+      <rect class="dg-hash" x="494" y="46" width="120" height="24" rx="4" id="mk-root"/><text class="dg-sub" x="554" y="62" text-anchor="middle">Root Hash</text>
+      <g id="mk-l1">
+        <rect class="dg-hash" x="300" y="120" width="120" height="32" rx="4"/><text class="dg-label" x="360" y="141" text-anchor="middle">Hash01</text>
+        <rect class="dg-hash" x="540" y="120" width="120" height="32" rx="4"/><text class="dg-label" x="600" y="141" text-anchor="middle">Hash23</text>
+        <path class="dg-arrow" d="M360,120 L520,72" marker-end="url(#mk-ah)"/>
+        <path class="dg-arrow" d="M600,120 L588,72" marker-end="url(#mk-ah)"/>
+      </g>
+      <g id="mk-h0"><rect class="dg-hash" x="170" y="210" width="110" height="30" rx="4"/><text class="dg-label" x="225" y="230" text-anchor="middle">Hash0</text><path class="dg-arrow" d="M280,210 L330,154" marker-end="url(#mk-ah)"/></g>
+      <g id="mk-h1"><rect class="dg-hash" x="310" y="210" width="110" height="30" rx="4"/><text class="dg-label" x="365" y="230" text-anchor="middle">Hash1</text><path class="dg-arrow" d="M365,210 L362,154" marker-end="url(#mk-ah)"/></g>
+      <g id="mk-h2"><rect class="dg-hash" x="540" y="210" width="110" height="30" rx="4"/><text class="dg-label" x="595" y="230" text-anchor="middle">Hash2</text><path class="dg-arrow" d="M595,210 L600,154" marker-end="url(#mk-ah)"/></g>
+      <g id="mk-h3"><rect class="dg-hash" x="680" y="210" width="110" height="30" rx="4"/><text class="dg-label" x="735" y="230" text-anchor="middle">Hash3</text><path class="dg-arrow" d="M700,210 L632,154" marker-end="url(#mk-ah)"/></g>
+      <g id="mk-tx0"><rect class="dg-key" x="170" y="290" width="110" height="34" rx="4"/><text class="dg-label" x="225" y="312" text-anchor="middle">Tx0</text><path class="dg-arrow" d="M225,290 L225,242" marker-end="url(#mk-ah)"/></g>
+      <g id="mk-tx1"><rect class="dg-key" x="310" y="290" width="110" height="34" rx="4"/><text class="dg-label" x="365" y="312" text-anchor="middle">Tx1</text><path class="dg-arrow" d="M365,290 L365,242" marker-end="url(#mk-ah)"/></g>
+      <g id="mk-tx2"><rect class="dg-key" x="540" y="290" width="110" height="34" rx="4"/><text class="dg-label" x="595" y="312" text-anchor="middle">Tx2</text><path class="dg-arrow" d="M595,290 L595,242" marker-end="url(#mk-ah)"/></g>
+      <g id="mk-tx3"><rect class="dg-key" x="680" y="290" width="110" height="34" rx="4"/><text class="dg-label" x="735" y="312" text-anchor="middle">Tx3</text><path class="dg-arrow" d="M735,290 L735,242" marker-end="url(#mk-ah)"/></g>
+      <text class="dg-sub" id="mk-caption" x="480" y="360" text-anchor="middle">Transactions Hashed in a Merkle Tree</text>
+    </svg>
+  </div>
+  <figcaption class="caption"></figcaption>
+  <div class="controls"><button data-prev>← Prev</button><button data-next>Next →</button><button class="replay" data-replay>↺ Replay</button><div class="dots"></div></div>
+</figure>
+
+<p>A block header with no transactions would be about 80 bytes. If we suppose blocks are generated every 10 minutes, 80 bytes * 6 * 24 * 365 = 4.2MB per year. With computer systems typically selling with 2GB of RAM as of 2008, and Moore's Law predicting current growth of 1.2GB per year, storage should not be a problem even if the block headers must be kept in memory.</p>
+</section>
+
+<section class="paper-section" id="sec-8">
+<h2><span class="secnum">8.</span> Simplified Payment Verification</h2>
+<p>It is possible to verify payments without running a full network node. A user only needs to keep a copy of the <span class="term" data-term="block-header">block headers</span> of the longest proof-of-work chain, which he can get by querying network nodes until he's convinced he has the longest chain, and obtain the <span class="term" data-term="merkle-branch">Merkle branch</span> linking the transaction to the block it's timestamped in. He can't check the transaction for himself, but by linking it to a place in the chain, he can see that a network node has accepted it, and blocks added after it further confirm the network has accepted it.</p>
+
+<figure class="explorable" id="fig-spv">
+  <div class="stage">
+    <svg viewBox="0 0 960 320" role="img">
+      <defs><marker id="spv-ah" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#6b6356"/></marker></defs>
+      <text class="dg-sub" x="40" y="28">Longest Proof-of-Work Chain</text>
+      <g id="spv-headers">
+        <g><rect class="dg-card dg-card-head" x="40" y="40" width="200" height="60" rx="6"/><text class="dg-sub" x="140" y="60" text-anchor="middle">Prev Hash · Nonce</text><rect class="dg-hash" x="56" y="68" width="168" height="22" rx="3"/><text class="dg-sub" x="140" y="84" text-anchor="middle">Merkle Root</text></g>
+        <g id="spv-h2"><rect class="dg-card dg-card-head" x="380" y="40" width="200" height="60" rx="6"/><text class="dg-sub" x="480" y="60" text-anchor="middle">Prev Hash · Nonce</text><rect class="dg-hash" x="396" y="68" width="168" height="22" rx="3"/><text class="dg-sub" x="480" y="84" text-anchor="middle">Merkle Root</text></g>
+        <g><rect class="dg-card dg-card-head" x="720" y="40" width="200" height="60" rx="6"/><text class="dg-sub" x="820" y="60" text-anchor="middle">Prev Hash · Nonce</text><rect class="dg-hash" x="736" y="68" width="168" height="22" rx="3"/><text class="dg-sub" x="820" y="84" text-anchor="middle">Merkle Root</text></g>
+        <path class="dg-arrow" d="M240,70 L378,70" marker-end="url(#spv-ah)"/>
+        <path class="dg-arrow" d="M580,70 L718,70" marker-end="url(#spv-ah)"/>
+      </g>
+      <g id="spv-branch" opacity="0">
+        <rect class="dg-hash" x="360" y="150" width="110" height="30" rx="4" opacity="0.45"/><text class="dg-label" x="415" y="170" text-anchor="middle">Hash01</text>
+        <rect class="dg-hash" x="500" y="150" width="110" height="30" rx="4"/><text class="dg-label" x="555" y="170" text-anchor="middle">Hash23</text>
+        <rect class="dg-hash" x="430" y="220" width="110" height="30" rx="4" opacity="0.45"/><text class="dg-label" x="485" y="240" text-anchor="middle">Hash2</text>
+        <rect class="dg-hash" x="570" y="220" width="110" height="30" rx="4"/><text class="dg-label" x="625" y="240" text-anchor="middle">Hash3</text>
+        <rect class="dg-key" x="570" y="278" width="110" height="32" rx="4"/><text class="dg-label" x="625" y="299" text-anchor="middle">Tx3</text>
+        <path class="dg-arrow" d="M480,150 L482,102" marker-end="url(#spv-ah)"/>
+        <path class="dg-arrow" d="M625,220 L575,182" marker-end="url(#spv-ah)"/>
+        <path class="dg-arrow" d="M625,278 L625,252" marker-end="url(#spv-ah)"/>
+        <text class="dg-sub" x="700" y="200" fill="#b5651d">Merkle Branch for Tx3</text>
+      </g>
+    </svg>
+  </div>
+  <figcaption class="caption"></figcaption>
+  <div class="controls"><button data-prev>← Prev</button><button data-next>Next →</button><button class="replay" data-replay>↺ Replay</button><div class="dots"></div></div>
+</figure>
+
+<p>As such, the verification is reliable as long as honest nodes control the network, but is more vulnerable if the network is overpowered by an attacker. While network nodes can verify transactions for themselves, the simplified method can be fooled by an attacker's fabricated transactions for as long as the attacker can continue to overpower the network. One strategy to protect against this would be to accept alerts from network nodes when they detect an invalid block, prompting the user's software to download the full block and alerted transactions to confirm the inconsistency. Businesses that receive frequent payments will probably still want to run their own nodes for more independent security and quicker verification.</p>
+</section>
+
+<section class="paper-section" id="sec-9">
+<h2><span class="secnum">9.</span> Combining and Splitting Value</h2>
+<p>Although it would be possible to handle coins individually, it would be unwieldy to make a separate transaction for every cent in a transfer. To allow value to be split and combined, transactions contain multiple <span class="term" data-term="inputs-outputs">inputs and outputs</span>. Normally there will be either a single input from a larger previous transaction or multiple inputs combining smaller amounts, and at most two outputs: one for the payment, and one returning the change, if any, back to the sender.</p>
+
+<figure class="explorable" id="fig-io">
+  <div class="stage">
+    <svg viewBox="0 0 960 280" role="img">
+      <defs><marker id="io-ah" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#6b6356"/></marker></defs>
+      <rect class="dg-card" x="360" y="60" width="240" height="160" rx="8"/>
+      <rect class="dg-card dg-card-head" x="360" y="60" width="240" height="28" rx="8"/><rect class="dg-card-head" x="360" y="76" width="240" height="12"/>
+      <text class="dg-title" x="480" y="80" text-anchor="middle">Transaction</text>
+      <g id="io-in">
+        <rect class="dg-sig" x="376" y="104" width="100" height="32" rx="4"/><text class="dg-label" x="426" y="125" text-anchor="middle">In</text>
+        <rect class="dg-sig" x="376" y="144" width="100" height="32" rx="4"/><text class="dg-label" x="426" y="165" text-anchor="middle">In</text>
+        <text class="dg-sub" x="426" y="198" text-anchor="middle">…</text>
+      </g>
+      <g id="io-out">
+        <rect class="dg-key" x="490" y="104" width="100" height="32" rx="4"/><text class="dg-label" x="540" y="125" text-anchor="middle">Out</text>
+        <text class="dg-sub" x="540" y="165" text-anchor="middle">…</text>
+      </g>
+      <g id="io-combine" opacity="0">
+        <path class="dg-arrow" d="M250,120 L374,120" marker-end="url(#io-ah)"/><text class="dg-sub" x="200" y="124" text-anchor="middle">smaller amt</text>
+        <path class="dg-arrow" d="M250,160 L374,160" marker-end="url(#io-ah)"/><text class="dg-sub" x="200" y="164" text-anchor="middle">smaller amt</text>
+      </g>
+      <g id="io-split" opacity="0">
+        <path class="dg-arrow" d="M592,120 L716,120" marker-end="url(#io-ah)"/><text class="dg-sub" x="770" y="124" text-anchor="middle">payment</text>
+        <rect class="dg-key" x="490" y="144" width="100" height="32" rx="4"/><text class="dg-label" x="540" y="165" text-anchor="middle">Out</text>
+        <path class="dg-arrow" d="M592,160 L716,160" marker-end="url(#io-ah)"/><text class="dg-sub" x="770" y="164" text-anchor="middle">change</text>
+      </g>
+    </svg>
+  </div>
+  <figcaption class="caption"></figcaption>
+  <div class="controls"><button data-prev>← Prev</button><button data-next>Next →</button><button class="replay" data-replay>↺ Replay</button><div class="dots"></div></div>
+</figure>
+
+<p>It should be noted that fan-out, where a transaction depends on several transactions, and those transactions depend on many more, is not a problem here. There is never the need to extract a complete standalone copy of a transaction's history.</p>
+</section>
+
+<section class="paper-section" id="sec-10">
+<h2><span class="secnum">10.</span> Privacy</h2>
+<p>The traditional banking model achieves a level of privacy by limiting access to information to the parties involved and the <span class="term" data-term="trusted-third-party">trusted third party</span>. The necessity to announce all transactions publicly precludes this method, but privacy can still be maintained by breaking the flow of information in another place: by keeping <span class="term" data-term="public-key">public keys</span> anonymous. The public can see that someone is sending an amount to someone else, but without information linking the transaction to anyone. This is similar to the level of information released by stock exchanges, where the time and size of individual trades, the "tape", is made public, but without telling who the parties were.</p>
+
+<div class="explorable" id="privacy">
+  <div class="caption" style="border-top:none;border-bottom:1px solid var(--rule)"><span class="step-label">Where is the privacy boundary?</span><span id="pv-text">The <b>traditional model</b> hides the whole transaction behind a trusted third party — but that third party sees everything.</span></div>
+  <div class="stage" style="padding:1.2rem 1.4rem 0.5rem">
+    <svg viewBox="0 0 960 170" role="img">
+      <defs><marker id="pv-ah" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#6b6356"/></marker></defs>
+      <g id="pv-trad">
+        <g class="pv-box"><rect class="dg-key" x="20" y="50" width="150" height="48" rx="6"/><text class="dg-label" x="95" y="79" text-anchor="middle">Identities</text></g>
+        <g class="pv-box"><rect class="dg-card" x="210" y="50" width="160" height="48" rx="6"/><text class="dg-label" x="290" y="79" text-anchor="middle">Transactions</text></g>
+        <g class="pv-box"><rect class="dg-sig" x="410" y="50" width="160" height="48" rx="6"/><text class="dg-label" x="490" y="73" text-anchor="middle">Trusted</text><text class="dg-label" x="490" y="89" text-anchor="middle">Third Party</text></g>
+        <g class="pv-box"><rect class="dg-card" x="610" y="50" width="150" height="48" rx="6"/><text class="dg-label" x="685" y="79" text-anchor="middle">Counterparty</text></g>
+        <g class="pv-box"><rect class="dg-hash" x="800" y="50" width="130" height="48" rx="6"/><text class="dg-label" x="865" y="79" text-anchor="middle">Public</text></g>
+        <path class="dg-arrow" d="M170,74 L208,74" marker-end="url(#pv-ah)"/>
+        <path class="dg-arrow" d="M370,74 L408,74" marker-end="url(#pv-ah)"/>
+        <path class="dg-arrow" d="M570,74 L608,74" marker-end="url(#pv-ah)"/>
+        <path class="dg-arrow" d="M760,74 L798,74" marker-end="url(#pv-ah)"/>
+        <rect x="6" y="34" width="566" height="84" rx="10" fill="none" stroke="#b3261e" stroke-dasharray="6 4" stroke-width="2"/>
+        <text class="dg-sub" x="289" y="28" text-anchor="middle" fill="#b3261e">privacy boundary — the third party sees identities + transactions</text>
+      </g>
+      <g id="pv-new" opacity="0">
+        <g class="pv-box"><rect class="dg-key" x="120" y="50" width="160" height="48" rx="6"/><text class="dg-label" x="200" y="79" text-anchor="middle">Identities</text></g>
+        <g class="pv-box"><rect class="dg-card" x="400" y="50" width="160" height="48" rx="6"/><text class="dg-label" x="480" y="79" text-anchor="middle">Transactions</text></g>
+        <g class="pv-box"><rect class="dg-hash" x="680" y="50" width="160" height="48" rx="6"/><text class="dg-label" x="760" y="79" text-anchor="middle">Public</text></g>
+        <path class="dg-arrow" d="M280,74 L398,74" marker-end="url(#pv-ah)"/>
+        <path class="dg-arrow" d="M560,74 L678,74" marker-end="url(#pv-ah)"/>
+        <rect x="106" y="34" width="188" height="84" rx="10" fill="none" stroke="#2e7d4f" stroke-dasharray="6 4" stroke-width="2"/>
+        <text class="dg-sub" x="200" y="28" text-anchor="middle" fill="#2e7d4f">privacy boundary moved here — identities stay private, transactions are public</text>
+      </g>
+    </svg>
+  </div>
+  <div class="controls">
+    <button id="pv-a" class="">Traditional model</button>
+    <button id="pv-b" class="replay">New model →</button>
+  </div>
+</div>
+
+<p>As an additional firewall, a new key pair should be used for each transaction to keep them from being linked to a common owner. Some linking is still unavoidable with multi-input transactions, which necessarily reveal that their inputs were owned by the same owner. The risk is that if the owner of a key is revealed, linking could reveal other transactions that belonged to the same owner.</p>
+</section>
+
+<section class="paper-section" id="sec-11">
+<h2><span class="secnum">11.</span> Calculations</h2>
+<p>We consider the scenario of an attacker trying to generate an alternate chain faster than the honest chain. Even if this is accomplished, it does not throw the system open to arbitrary changes, such as creating value out of thin air or taking money that never belonged to the attacker. Nodes are not going to accept an invalid transaction as payment, and honest nodes will never accept a block containing them. An attacker can only try to change one of his own transactions to take back money he recently spent.</p>
+<p>The race between the honest chain and an attacker chain can be characterized as a <span class="term" data-term="binomial-random-walk">Binomial Random Walk</span>. The success event is the honest chain being extended by one block, increasing its lead by +1, and the failure event is the attacker's chain being extended by one block, reducing the gap by -1.</p>
+<p>The probability of an attacker catching up from a given deficit is analogous to a <span class="term" data-term="gamblers-ruin">Gambler's Ruin</span> problem. Suppose a gambler with unlimited credit starts at a deficit and plays potentially an infinite number of trials to try to reach breakeven. We can calculate the probability he ever reaches breakeven, or that an attacker ever catches up with the honest chain, as follows [8]:</p>
+<div class="aside" style="font-family:var(--mono);font-size:0.85rem">
+  p = probability an honest node finds the next block<br>
+  q = probability the attacker finds the next block<br>
+  q<sub>z</sub> = probability the attacker will ever catch up from z blocks behind<br><br>
+  q<sub>z</sub> = 1 &nbsp; if p ≤ q<br>
+  q<sub>z</sub> = (q/p)<sup>z</sup> &nbsp; if p &gt; q
+</div>
+<p>Given our assumption that p &gt; q, the probability drops exponentially as the number of blocks the attacker has to catch up with increases. With the odds against him, if he doesn't make a lucky lunge forward early on, his chances become vanishingly small as he falls further behind.</p>
+<p>We now consider how long the recipient of a new transaction needs to wait before being sufficiently certain the sender can't change the transaction. We assume the sender is an attacker who wants to make the recipient believe he paid him for a while, then switch it to pay back to himself after some time has passed. The receiver will be alerted when that happens, but the sender hopes it will be too late.</p>
+<p>The receiver generates a new key pair and gives the public key to the sender shortly before signing. This prevents the sender from preparing a chain of blocks ahead of time by working on it continuously until he is lucky enough to get far enough ahead, then executing the transaction at that moment. Once the transaction is sent, the dishonest sender starts working in secret on a parallel chain containing an alternate version of his transaction.</p>
+<p>The recipient waits until the transaction has been added to a block and z blocks have been linked after it. He doesn't know the exact amount of progress the attacker has made, but assuming the honest blocks took the average expected time per block, the attacker's potential progress will be a <span class="term" data-term="poisson">Poisson distribution</span> with expected value:</p>
+<div class="aside" style="font-family:var(--mono);font-size:0.9rem;text-align:center">λ = z · (q / p)</div>
+<p>To get the probability the attacker could still catch up now, we multiply the Poisson density for each amount of progress he could have made by the probability he could catch up from that point:</p>
+<div class="aside" style="font-family:var(--mono);font-size:0.82rem;text-align:center">Σ<sub>k=0…∞</sub> &nbsp; ( λ<sup>k</sup> e<sup>−λ</sup> / k! ) · { (q/p)<sup>(z−k)</sup> if k ≤ z &nbsp;;&nbsp; 1 if k &gt; z }</div>
+<p>Rearranging to avoid summing the infinite tail of the distribution...</p>
+<div class="aside" style="font-family:var(--mono);font-size:0.82rem;text-align:center">1 − Σ<sub>k=0…z</sub> &nbsp; ( λ<sup>k</sup> e<sup>−λ</sup> / k! ) · ( 1 − (q/p)<sup>(z−k)</sup> )</div>
+<p>Converting to C code...</p>
+<pre><code>#include &lt;math.h&gt;
+
+double AttackerSuccessProbability(double q, int z)
+{
+    double p = 1.0 - q;
+    double lambda = z * (q / p);
+    double sum = 1.0;
+    int i, k;
+    for (k = 0; k &lt;= z; k++)
+    {
+        double poisson = exp(-lambda);
+        for (i = 1; i &lt;= k; i++)
+            poisson *= lambda / i;
+        sum -= poisson * (1 - pow(q / p, z - k));
+    }
+    return sum;
+}</code></pre>
+
+<div class="explorable" id="calc">
+  <div class="caption" style="border-top:none;border-bottom:1px solid var(--rule)"><span class="step-label">Run it · the C function above, in JavaScript</span>Move the sliders. <code>q</code> is the attacker’s share of hash power; <code>z</code> is how many confirmations the recipient waits. The curve is the attacker’s success probability as a function of <code>z</code>.</div>
+  <div style="padding:1.2rem 1.4rem">
+    <div style="font-family:var(--mono);font-size:0.85rem;display:flex;flex-wrap:wrap;gap:1.5rem;align-items:center">
+      <label>q = <b id="c-q">0.10</b><br><input id="c-q-in" type="range" min="0.01" max="0.49" step="0.01" value="0.10" style="width:200px"></label>
+      <label>z = <b id="c-z">6</b> confirmations<br><input id="c-z-in" type="range" min="0" max="50" step="1" value="6" style="width:200px"></label>
+    </div>
+    <div style="margin-top:1rem;font-size:1.05rem">
+      Attacker success probability: <b id="c-p" style="font-family:var(--mono);color:var(--accent)">—</b>
+      <span id="c-verdict" class="dg-sub" style="margin-left:0.5rem"></span>
+    </div>
+    <canvas id="c-chart" width="860" height="240" style="width:100%;height:auto;margin-top:1rem;border:1px solid var(--rule);border-radius:6px;background:#fff"></canvas>
+  </div>
+</div>
+
+<p>Running some results, we can see the probability drop off exponentially with z.</p>
+<div style="display:flex;gap:2.5rem;flex-wrap:wrap">
+<pre style="flex:1;min-width:200px"><code>q=0.1
+z=0    P=1.0000000
+z=1    P=0.2045873
+z=2    P=0.0509779
+z=3    P=0.0131722
+z=4    P=0.0034552
+z=5    P=0.0009137
+z=6    P=0.0002428
+z=7    P=0.0000647
+z=8    P=0.0000173
+z=9    P=0.0000046
+z=10   P=0.0000012</code></pre>
+<pre style="flex:1;min-width:200px"><code>q=0.3
+z=0    P=1.0000000
+z=5    P=0.1773523
+z=10   P=0.0416605
+z=15   P=0.0101008
+z=20   P=0.0024804
+z=25   P=0.0006132
+z=30   P=0.0001522
+z=35   P=0.0000379
+z=40   P=0.0000095
+z=45   P=0.0000024
+z=50   P=0.0000006</code></pre>
+</div>
+<p>Solving for P less than 0.1%...</p>
+<pre><code>P &lt; 0.001
+q=0.10   z=5
+q=0.15   z=8
+q=0.20   z=11
+q=0.25   z=15
+q=0.30   z=24
+q=0.35   z=41
+q=0.40   z=89
+q=0.45   z=340</code></pre>
+<div class="takeaway"><span class="label">Read the last table</span> This is the punchline of the whole paper made concrete: as the attacker approaches half the hash power (q→0.5), the confirmations needed for the same safety <b>explode</b> (z=5 at 10%, but z=340 at 45%). Below 50% you're always safe <i>eventually</i>; at 50% the guarantee collapses. Set <code>q</code> near 0.49 in the calculator and watch the curve refuse to fall.</div>
+</section>
+
+<section class="paper-section" id="sec-12">
+<h2><span class="secnum">12.</span> Conclusion</h2>
+<p>We have proposed a system for electronic transactions without relying on trust. We started with the usual framework of coins made from <span class="term" data-term="digital-signatures">digital signatures</span>, which provides strong control of ownership, but is incomplete without a way to prevent <span class="term" data-term="double-spending">double-spending</span>. To solve this, we proposed a peer-to-peer network using <span class="term" data-term="proof-of-work">proof-of-work</span> to record a public history of transactions that quickly becomes computationally impractical for an attacker to change if honest nodes control a majority of CPU power. The network is robust in its unstructured simplicity. Nodes work all at once with little coordination. They do not need to be identified, since messages are not routed to any particular place and only need to be delivered on a best effort basis. Nodes can leave and rejoin the network at will, accepting the proof-of-work chain as proof of what happened while they were gone. They vote with their <span class="term" data-term="cpu-power">CPU power</span>, expressing their acceptance of valid blocks by working on extending them and rejecting invalid blocks by refusing to work on them. Any needed rules and incentives can be enforced with this consensus mechanism.</p>
+</section>
+
+</div><!-- /paper-body -->
+
+<div class="ask"><strong>About this page.</strong> This is the full Bitcoin whitepaper, reproduced <em>word for word</em>, with interactive diagrams layered on top to make the mechanics easier to grasp — step through each figure, mine a real block, and run the attack math. See also the companion <a href="lessons/0001-double-spend-and-proof-of-work.html">explainer on double-spend &amp; proof-of-work</a>.</div>
+<div class="footer-nav">
+  <a href="reference/glossary.html">Glossary</a> · Use ← → arrow keys to step the diagram you’re hovering<br>
+  <span style="font-size:0.82rem">Text: Satoshi Nakamoto, <a href="https://bitcoin.org/bitcoin.pdf"><em>Bitcoin: A Peer-to-Peer Electronic Cash System</em></a> (2008), reproduced verbatim under the <a href="https://bitcoin.org/en/terms">MIT License</a>. Interactive diagrams and code © contributors, MIT-licensed. Independent educational project, not affiliated with bitcoin.org.</span>
+</div>
+
+<script src="assets/gsap.min.js"></script>
+<script src="assets/glossary-data.js"></script>
+<script src="assets/glossary-tooltip.js"></script>
+<script src="assets/explorable.js"></script>
+<script>
+// ── §2 transaction chain ──
+Explorable.stepper({
+  root: '#fig1',
+  steps: [
+    { label: 'A coin exists', text: 'An electronic <b>coin</b> is just a chain of signatures. Here is the first link — Owner 1 currently holds the coin (Transaction 1 carries Owner 1’s public key and the signature from the <i>previous</i> owner, Owner 0).' },
+    { label: 'Pay Owner 2', text: 'Owner 1 wants to pay Owner 2. To transfer, you need the recipient’s <b>public key</b> — it appears at the top of the new Transaction 2.' },
+    { label: 'Hash past + future', text: 'Owner 1 hashes the <b>previous transaction</b> together with <b>Owner 2’s public key</b>. This single hash binds the coin’s history to its next owner — the crux of the whole scheme.' },
+    { label: 'Sign it', text: 'Owner 1 signs that hash with their <b>private key</b>. The resulting signature <i>is</i> the transfer: only Owner 1 could have produced it, and it commits to exactly this hash.' },
+    { label: 'The link is forged', text: 'Anyone can now <b>verify</b>: Owner 1’s signature checks out against Owner 1’s public key from Transaction 1, proving an unbroken chain of ownership back through the coin’s past.' },
+    { label: 'Repeat → a chain', text: 'Owner 2 transfers to Owner 3 the exact same way. Each transfer adds a link; a payee verifies the signatures all the way back to the origin. <i>This</i> is what “a coin is a chain of digital signatures” means.' },
+    { label: 'The catch', text: 'But nothing here stops Owner 1 from <b>also</b> signing the same coin over to someone else. Signatures prove authorization — not <i>order</i>. That gap is the <b>double-spending</b> problem the rest of the paper solves. → read on below.' }
+  ],
+  build: function (gsap) {
+    var hidden = ['#c2-frame','#c2-pk','#c2-hash','#linkA','#linkB','#pk1priv','#arrow-sign1','#c2-sig','#arrow-verify1','#g3','#g-ghost'];
+    gsap.set(hidden, { opacity: 0 });
+    var tl = gsap.timeline({ defaults: { ease: 'power2.out', duration: 0.5 } });
+    tl.addLabel('s0');
+    tl.to(['#c2-frame', '#c2-pk'], { opacity: 1 });            tl.addLabel('s1');
+    tl.to(['#c2-hash', '#linkA', '#linkB'], { opacity: 1 });   tl.addLabel('s2');
+    tl.to(['#pk1priv', '#arrow-sign1', '#c2-sig'], { opacity: 1 }); tl.addLabel('s3');
+    tl.to('#arrow-verify1', { opacity: 1 });                   tl.addLabel('s4');
+    tl.to('#g3', { opacity: 1 });                              tl.addLabel('s5');
+    tl.to('#g-main', { opacity: 0.18 }).to('#g-ghost', { opacity: 1 }, '<'); tl.addLabel('s6');
+    return tl;
+  }
+});
+
+// ── §3 timestamp chain ──
+Explorable.stepper({
+  root: '#fig-ts',
+  steps: [
+    { label: 'A block of items', text: 'Start with a block of items to timestamp. Hashing them yields a fingerprint — change any item and the fingerprint changes completely.' },
+    { label: 'Publish the hash', text: 'The block’s hash is published widely. That the data hashed to this value proves it existed at this time.' },
+    { label: 'Chain the next block', text: 'The next block <b>includes the previous block’s hash</b> inside its own. Now block 2 is cryptographically bound to block 1.' },
+    { label: 'Each reinforces the last', text: 'Block 3 includes block 2’s hash, and so on. Every new timestamp reinforces all the ones before it — a tamper-evident chain.' },
+    { label: 'Why it’s tamper-evident', text: 'Alter one item in block 1 and its hash changes — which no longer matches the “prev. hash” recorded in block 2, which breaks block 3… the whole chain downstream is invalidated at once.' }
+  ],
+  build: function (gsap) {
+    gsap.set(['#ts-b2','#ts-b3','#ts-link1','#ts-link2','#ts-tamper'], { opacity: 0 });
+    var tl = gsap.timeline({ defaults: { ease: 'power2.out', duration: 0.5 } });
+    tl.addLabel('s0');
+    tl.to('#ts-b1', { opacity: 1 }); tl.addLabel('s1');
+    tl.to(['#ts-b2','#ts-link1'], { opacity: 1 }); tl.addLabel('s2');
+    tl.to(['#ts-b3','#ts-link2'], { opacity: 1 }); tl.addLabel('s3');
+    tl.to('#ts-tamper', { opacity: 1 }); tl.addLabel('s4');
+    return tl;
+  }
+});
+
+// ── §5 network steps ──
+Explorable.stepper({
+  root: '#fig-net',
+  steps: [
+    { label: '1 · Broadcast tx', text: 'A new transaction appears at one node and is broadcast to all nodes.' },
+    { label: '2–3 · Collect & mine', text: 'Each node collects new transactions into a block and works on finding a difficult proof-of-work for it.' },
+    { label: '4 · Block found', text: 'One node finds a valid proof-of-work and broadcasts its block to all nodes.' },
+    { label: '5 · Validate', text: 'Nodes accept the block only if every transaction in it is valid and not already spent.' },
+    { label: '6 · Extend', text: 'Nodes express acceptance by working on the next block, using the accepted block’s hash as the previous hash — and the cycle repeats.' }
+  ],
+  build: function (gsap) {
+    gsap.set(['#net-tx','#net-broadcast','#net-pow','#net-blockcast','#net-accept'], { opacity: 0 });
+    var tl = gsap.timeline({ defaults: { ease: 'power2.out', duration: 0.5 } });
+    tl.addLabel('s0');
+    tl.to('#net-tx', { opacity: 1 }); tl.addLabel('s1');
+    tl.to('#net-broadcast', { opacity: 1 }); tl.addLabel('s2');
+    tl.to('#net-pow', { opacity: 1 }); tl.addLabel('s3');
+    tl.to('#net-blockcast', { opacity: 1 }); tl.addLabel('s4');
+    tl.to('#net-accept', { opacity: 1 }); tl.addLabel('s5');
+    return tl;
+  }
+});
+
+// ── §7 Merkle tree pruning ──
+Explorable.stepper({
+  root: '#fig-merkle',
+  steps: [
+    { label: 'Hash each transaction', text: 'Every transaction in the block is hashed: Tx0→Hash0, Tx1→Hash1, and so on. These are the leaves.' },
+    { label: 'Pair up the hashes', text: 'Adjacent hashes are hashed together: Hash0+Hash1 → Hash01, Hash2+Hash3 → Hash23. Keep pairing up the tree.' },
+    { label: 'One root in the header', text: 'The top is the <b>root hash</b> — and only the root goes into the block header. The root fingerprints all four transactions at once.' },
+    { label: 'Prune spent transactions', text: 'Once Tx0–Tx2 are old and spent, discard them <b>and</b> their interior hashes — keep just Hash01 as a stub. The pruned data is gone from disk.' },
+    { label: 'Root hash is unchanged', text: 'The block header — and therefore the block hash — is identical. We saved disk space without breaking the chain’s integrity. That’s the whole trick.' }
+  ],
+  build: function (gsap) {
+    var leaves = ['#mk-h0','#mk-h1','#mk-h2','#mk-h3'];
+    gsap.set(['#mk-l1','#mk-root'].concat(leaves), { opacity: 0 });
+    var tl = gsap.timeline({ defaults: { ease: 'power2.out', duration: 0.45 } });
+    tl.addLabel('s0');
+    tl.to(leaves, { opacity: 1, stagger: 0.05 }); tl.addLabel('s1');
+    tl.to('#mk-l1', { opacity: 1 }); tl.addLabel('s2');
+    tl.to('#mk-root', { opacity: 1, duration: 0.3 }).fromTo('#mk-root', { scale: 1 }, { scale: 1.08, yoyo: true, repeat: 1, transformOrigin: 'center', duration: 0.2 }); tl.addLabel('s3');
+    tl.to(['#mk-tx0','#mk-tx1','#mk-tx2','#mk-h0','#mk-h1','#mk-h2'], { opacity: 0.12 })
+      .set('#mk-caption', { textContent: 'After Pruning Tx0-2 from the Block' }, '<'); tl.addLabel('s4');
+    tl.fromTo('#mk-root', { scale: 1 }, { scale: 1.08, yoyo: true, repeat: 1, transformOrigin: 'center', duration: 0.25 }); tl.addLabel('s5');
+    return tl;
+  }
+});
+
+// ── §8 SPV ──
+Explorable.stepper({
+  root: '#fig-spv',
+  steps: [
+    { label: 'Keep only headers', text: 'A lightweight client stores just the ~80-byte block headers of the longest chain — not the transactions. Tiny.' },
+    { label: 'Request a Merkle branch', text: 'To check that Tx3 was paid, it asks a node for the <b>Merkle branch</b>: just the sibling hashes (Hash01, Hash2) needed to recompute the root.' },
+    { label: 'Recompute the root', text: 'Hash Tx3 → combine up the branch → you get a root. If it matches the root in a header, Tx3 really is in that block.' },
+    { label: 'Depth = confidence', text: 'The client can’t validate the transaction itself, but seeing it buried under more blocks shows the network accepted it. More confirmations, more certainty.' }
+  ],
+  build: function (gsap) {
+    gsap.set('#spv-branch', { opacity: 0 });
+    var tl = gsap.timeline({ defaults: { ease: 'power2.out', duration: 0.5 } });
+    tl.addLabel('s0');
+    tl.to('#spv-h2', { opacity: 1, duration: 0.2 }).fromTo('#spv-h2', { scale: 1 }, { scale: 1.04, yoyo: true, repeat: 1, transformOrigin: 'center', duration: 0.2 }); tl.addLabel('s1');
+    tl.to('#spv-branch', { opacity: 1 }); tl.addLabel('s2');
+    tl.fromTo('#spv-branch', { opacity: 1 }, { opacity: 1, duration: 0.3 }); tl.addLabel('s3');
+    return tl;
+  }
+});
+
+// ── §9 inputs/outputs ──
+Explorable.stepper({
+  root: '#fig-io',
+  steps: [
+    { label: 'A transaction', text: 'A transaction is a box with <b>inputs</b> on the left and <b>outputs</b> on the right — value flows through it.' },
+    { label: 'Combine inputs', text: 'Multiple inputs combine smaller amounts from previous transactions into one spend — like gathering coins from a jar.' },
+    { label: 'Split into outputs', text: 'Outputs split the value: typically one for the <b>payment</b> and one returning the <b>change</b> back to the sender. At most two, usually.' }
+  ],
+  build: function (gsap) {
+    gsap.set(['#io-combine','#io-split'], { opacity: 0 });
+    var tl = gsap.timeline({ defaults: { ease: 'power2.out', duration: 0.5 } });
+    tl.addLabel('s0');
+    tl.to('#io-combine', { opacity: 1 }); tl.addLabel('s1');
+    tl.to('#io-split', { opacity: 1 }); tl.addLabel('s2');
+    return tl;
+  }
+});
+
+// ── §10 privacy model toggle ──
+(function () {
+  var trad = document.getElementById('pv-trad'), nw = document.getElementById('pv-new'),
+      txt = document.getElementById('pv-text'), a = document.getElementById('pv-a'), b = document.getElementById('pv-b');
+  function show(model) {
+    if (model === 'new') {
+      gsap.to(trad, { opacity: 0, duration: 0.4 }); gsap.to(nw, { opacity: 1, duration: 0.4, delay: 0.15 });
+      txt.innerHTML = 'The <b>new model</b> still publishes every transaction — but the link from <i>identity</i> to <i>public key</i> is cut. Anyone sees amounts moving; no one sees who.';
+      a.className = 'replay'; b.className = '';
+    } else {
+      gsap.to(nw, { opacity: 0, duration: 0.4 }); gsap.to(trad, { opacity: 1, duration: 0.4, delay: 0.15 });
+      txt.innerHTML = 'The <b>traditional model</b> hides the whole transaction behind a trusted third party — but that third party sees everything.';
+      a.className = ''; b.className = 'replay';
+    }
+  }
+  a.addEventListener('click', function () { show('trad'); });
+  b.addEventListener('click', function () { show('new'); });
+})();
+
+// ── §4 live proof-of-work miner ──
+(function () {
+  var enc = new TextEncoder();
+  var nonceEl = document.getElementById('m-nonce'), triesEl = document.getElementById('m-tries'),
+      rateEl = document.getElementById('m-rate'), hashEl = document.getElementById('m-hash'),
+      statusEl = document.getElementById('m-status'), diffEl = document.getElementById('m-diff'),
+      goBtn = document.getElementById('m-go'), stopBtn = document.getElementById('m-stop');
+  var running = false, nonce = 0, tries = 0, t0 = 0;
+  var prefix = 'Owner1 -> Owner2 : 1 coin | prev 00000a1f9c | nonce ';
+  function toHex(buf) { var v = new Uint8Array(buf), s = ''; for (var i = 0; i < v.length; i++) s += v[i].toString(16).padStart(2, '0'); return s; }
+  async function mineBatch(zeros) {
+    var target = '0'.repeat(zeros), batch = 800;
+    while (batch-- > 0 && running) {
+      var h = toHex(await crypto.subtle.digest('SHA-256', enc.encode(prefix + nonce)));
+      tries++;
+      if (h.slice(0, zeros) === target) {
+        nonceEl.textContent = nonce; triesEl.textContent = tries.toLocaleString();
+        hashEl.innerHTML = '<b style="color:#2e7d4f">' + h.slice(0, zeros) + '</b>' + h.slice(zeros);
+        statusEl.innerHTML = '✓ <b style="color:#2e7d4f">Block mined!</b> Found a hash with ' + zeros + ' leading zero' + (zeros > 1 ? 's' : '') + ' after ' + tries.toLocaleString() + ' tries. Verifying it took just one hash.';
+        stop(); return;
+      }
+      nonce++;
+    }
+    if (running) {
+      var dt = (performance.now() - t0) / 1000;
+      nonceEl.textContent = nonce; triesEl.textContent = tries.toLocaleString();
+      rateEl.textContent = Math.round(tries / dt).toLocaleString();
+      hashEl.textContent = toHex(await crypto.subtle.digest('SHA-256', enc.encode(prefix + nonce))).slice(0, 32) + '…';
+      requestAnimationFrame(function () { mineBatch(zeros); });
+    }
+  }
+  function start() {
+    running = true; nonce = 0; tries = 0; t0 = performance.now();
+    goBtn.disabled = true; stopBtn.disabled = false; diffEl.disabled = true;
+    statusEl.innerHTML = '<span style="color:var(--accent)">mining…</span>';
+    mineBatch(parseInt(diffEl.value, 10));
+  }
+  function stop() { running = false; goBtn.disabled = false; stopBtn.disabled = true; diffEl.disabled = false; }
+  goBtn.addEventListener('click', start);
+  stopBtn.addEventListener('click', function () { stop(); statusEl.textContent = 'stopped.'; });
+})();
+
+// ── §11 attacker probability calculator (Nakamoto's algorithm, ported) ──
+function attackerSuccess(q, z) {
+  var p = 1.0 - q, lambda = z * (q / p), sum = 1.0;
+  for (var k = 0; k <= z; k++) {
+    var poisson = Math.exp(-lambda);
+    for (var i = 1; i <= k; i++) poisson *= lambda / i;
+    sum -= poisson * (1 - Math.pow(q / p, z - k));
+  }
+  return sum;
+}
+(function () {
+  var qIn = document.getElementById('c-q-in'), zIn = document.getElementById('c-z-in'),
+      qLab = document.getElementById('c-q'), zLab = document.getElementById('c-z'),
+      pOut = document.getElementById('c-p'), verdict = document.getElementById('c-verdict'),
+      cv = document.getElementById('c-chart'), ctx = cv.getContext('2d');
+  var W = cv.width, H = cv.height, padL = 54, padB = 28, padT = 12, padR = 14;
+  function fmt(p) { if (p >= 0.001) return p.toFixed(7); if (p <= 0) return '0'; return p.toExponential(3); }
+  function draw(q, zSel) {
+    ctx.clearRect(0, 0, W, H);
+    var zMax = 50, yTop = 0, yBot = -7;
+    function X(z) { return padL + (W - padL - padR) * (z / zMax); }
+    function Y(p) { var l = Math.max(yBot, Math.log10(Math.max(p, 1e-8))); return padT + (H - padT - padB) * (yTop - l) / (yTop - yBot); }
+    ctx.strokeStyle = '#eee'; ctx.fillStyle = '#999'; ctx.font = '11px monospace'; ctx.textAlign = 'right';
+    for (var e = 0; e >= -7; e--) { var y = Y(Math.pow(10, e)); ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W - padR, y); ctx.stroke(); ctx.fillText(e === 0 ? '1' : '1e' + e, padL - 6, y + 3); }
+    ctx.textAlign = 'center';
+    for (var z = 0; z <= zMax; z += 10) ctx.fillText(z, X(z), H - 8);
+    ctx.strokeStyle = '#b5651d'; ctx.lineWidth = 2; ctx.beginPath();
+    for (var zz = 0; zz <= zMax; zz++) { var pv = attackerSuccess(q, zz), px = X(zz), py = Y(pv); if (zz === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py); }
+    ctx.stroke();
+    ctx.strokeStyle = '#2e7d4f'; ctx.setLineDash([5, 4]); ctx.beginPath(); ctx.moveTo(padL, Y(0.001)); ctx.lineTo(W - padR, Y(0.001)); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = '#2e7d4f'; ctx.textAlign = 'left'; ctx.fillText('P < 0.1%', padL + 4, Y(0.001) - 4);
+    var sp = attackerSuccess(q, zSel); ctx.fillStyle = '#b3261e'; ctx.beginPath(); ctx.arc(X(zSel), Y(sp), 4, 0, 7); ctx.fill();
+  }
+  function update() {
+    var q = parseFloat(qIn.value), z = parseInt(zIn.value, 10);
+    qLab.textContent = q.toFixed(2); zLab.textContent = z;
+    var p = attackerSuccess(q, z); pOut.textContent = fmt(p);
+    verdict.textContent = p < 0.001 ? '— safe (under 0.1%)' : (p > 0.5 ? '— attacker favored' : '— still risky');
+    verdict.style.color = p < 0.001 ? '#2e7d4f' : (p > 0.5 ? '#b3261e' : '#b5651d');
+    draw(q, z);
+  }
+  qIn.addEventListener('input', update); zIn.addEventListener('input', update); update();
+})();
+
+// ── TOC active-section highlight ──
+(function () {
+  var links = Array.prototype.slice.call(document.querySelectorAll('.paper-toc a'));
+  var map = {}; links.forEach(function (a) { map[a.getAttribute('href').slice(1)] = a; });
+  var obs = new IntersectionObserver(function (entries) {
+    entries.forEach(function (en) {
+      if (en.isIntersecting) { links.forEach(function (l) { l.classList.remove('active'); }); if (map[en.target.id]) map[en.target.id].classList.add('active'); }
+    });
+  }, { rootMargin: '-10% 0px -80% 0px' });
+  document.querySelectorAll('.paper-section').forEach(function (s) { obs.observe(s); });
+})();
+</script>
+</body>
+</html>
