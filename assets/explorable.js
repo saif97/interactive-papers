@@ -62,16 +62,25 @@ window.Explorable = (function () {
     var hovered = false;
     root.addEventListener('mouseenter', function () { hovered = true; });
     root.addEventListener('mouseleave', function () { hovered = false; });
-    document.addEventListener('keydown', function (e) {
+    function onKey(e) {
       if (!hovered) return;
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
       if (e.key === 'ArrowRight') { e.preventDefault(); go(cur + 1); }
       if (e.key === 'ArrowLeft') { e.preventDefault(); go(cur - 1); }
-    });
+    }
+    document.addEventListener('keydown', onKey);
 
     // start at step 0 (timeline already at time 0)
     render();
-    return { go: go };
+
+    // Tear down a stepper whose container is being removed (e.g. an explainer
+    // panel closing): kill the timeline and drop the global key listener so
+    // nothing dangles.
+    function destroy() {
+      document.removeEventListener('keydown', onKey);
+      tl.kill();
+    }
+    return { go: go, destroy: destroy };
   }
 
   return { stepper: stepper };
