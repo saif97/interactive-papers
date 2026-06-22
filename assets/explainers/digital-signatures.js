@@ -23,10 +23,13 @@
           '<g id="sig-alice">' +
             '<rect x="24" y="40" width="300" height="280" rx="14" fill="#f6f2e8" stroke="#ddd5c4" stroke-width="1.5"/>' +
             '<text class="dg-title" x="174" y="70" text-anchor="middle">ALICE &#183; sender</text>' +
-            '<rect class="dg-card" x="50" y="92" width="248" height="48" rx="6"/>' +
-            '<text class="dg-title" x="174" y="121" text-anchor="middle">Pay coin &#8594; Bob</text>' +
-            '<rect class="dg-priv" x="50" y="156" width="248" height="48" rx="6"/>' +
-            '<text class="dg-label" x="174" y="185" text-anchor="middle">Private Key &#183; secret</text>' +
+            // the message is a document (data), styled distinctly from people/keys
+            '<path d="M56,90 H278 L298,110 V140 A6,6 0 0 1 292,146 H56 A6,6 0 0 1 50,140 V96 A6,6 0 0 1 56,90 Z" fill="#fff6d8" stroke="#cdb878" stroke-width="1.4"/>' +
+            '<path d="M278,90 L278,110 L298,110 Z" fill="#cdb878"/>' +
+            '<text class="dg-sub" x="64" y="110" text-anchor="start">MESSAGE</text>' +
+            '<text class="dg-title" x="174" y="134" text-anchor="middle">Pay coin &#8594; Bob</text>' +
+            '<rect class="dg-priv" x="50" y="160" width="248" height="44" rx="6"/>' +
+            '<text class="dg-label" x="174" y="187" text-anchor="middle">Private Key &#183; secret</text>' +
           '</g>' +
 
           // BOB zone (payee) — Alice's public key, always visible
