@@ -90,7 +90,7 @@
           // Step 4 — the fix: order by work
           '<div class="exw-step" data-step>' +
             '<h3>4 · Order by work, not by identities</h3>' +
-            '<p>The fix: make each vote cost real computational work, so votes can\'t be conjured for free. The accepted order is the chain with the most cumulative work — the longest chain. Drag the attacker\'s share of the network\'s work:</p>' +
+            '<p>The fix: make each vote cost real computational work, so votes can\'t be conjured for free. The accepted history is the one with the most total work behind it — Bitcoin calls this the longest chain (longest by work, not by number of transfers). Drag the attacker\'s share of the network\'s work:</p>' +
             '<div class="exw-card">' +
               '<div class="exw-row"><span class="exw-label" style="margin:0">Attacker\'s share of total work</span><span class="exw-tag" data-shareval>30%</span></div>' +
               '<input class="exw-input" type="range" min="0" max="100" value="30" data-share style="margin-top:0.5rem;padding:0">' +
@@ -168,7 +168,7 @@
         tallyEl.innerHTML = '<div class="exw-result ' + (attackerWins ? 'bad' : 'ok') + '" style="margin-top:0.7rem"><div><b>' +
           (attackerWins ? '✗ “Carol first” wins' : '✓ “Bob first” wins') + '</b><span class="small">' +
           (attackerWins
-            ? 'The attacker out-voted everyone — for free. Counting identities is meaningless when anyone can mint unlimited ones (a Sybil attack).'
+            ? 'The attacker out-voted everyone — for free. When anyone can mint unlimited identities, counting heads is meaningless. Flooding a vote with fake identities like this is called a Sybil attack.'
             : 'Honest majority holds — for now. But the attacker can keep adding identities at no cost.') +
           '</span></div></div>';
       }

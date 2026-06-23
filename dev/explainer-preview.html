@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Explainer preview · dev harness</title>
+  <link rel="stylesheet" href="../assets/style.css">
+  <style>
+    /* Harness chrome only — the explainer itself uses style.css unchanged. */
+    body { max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem 6rem; }
+    .ph-bar { display: flex; gap: .6rem; align-items: center; flex-wrap: wrap; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--ix-soft, #dce9fb); }
+    .ph-bar h1 { font-size: 1rem; margin: 0 .5rem 0 0; font-weight: 600; }
+    .ph-bar select, .ph-bar button { font: inherit; padding: .35rem .6rem; border-radius: 6px; border: 1px solid #ccc; background: #fff; cursor: pointer; }
+    .ph-note { color: #666; font-size: .85rem; }
+    .ph-missing { color: #b00; padding: 1rem; border: 1px solid #f0b0b0; border-radius: 8px; background: #fff5f5; }
+    /* Force the panel to render open (no click-to-expand here). */
+    .explainer-panel { display: block; }
+  </style>
+</head>
+<body>
+  <div class="ph-bar">
+    <h1>Explainer preview</h1>
+    <select id="ph-pick" aria-label="Choose explainer"></select>
+    <button id="ph-remount" title="unmount then mount — exercises the unmount path">↻ Remount</button>
+    <span class="ph-note">Isolated dev harness · not part of the site</span>
+  </div>
+  <div id="ph-mount"></div>
+
+  <!-- Every explainer module, self-registering into window.EXPLAINERS.
+       Add a new one here AND in MODULES below — one line each. -->
+  <script src="../assets/explainers/_base.js"></script>
+  <script src="../assets/explainers/double-spending.js"></script>
+  <script src="../assets/explainers/digital-signatures.js"></script>
+
+  <script>
+    // Keys that have a preview here. Keep in sync with the <script> tags above.
+    var MODULES = ['double-spending', 'digital-signatures'];
+
+    var EX = window.EXPLAINERS || {};
+    var pick = document.getElementById('ph-pick');
+    var mountEl = document.getElementById('ph-mount');
+    var current = null; // { mod, body }
+
+    MODULES.forEach(function (k) {
+      var o = document.createElement('option');
+      o.value = k;
+      o.textContent = (EX[k] && EX[k].title) ? EX[k].title + '  (' + k + ')' : k + '  — NOT REGISTERED';
+      pick.appendChild(o);
+    });
+
+    function keyFromUrl() {
+      var m = location.search.match(/[?&]key=([^&]+)/);
+      return m ? decodeURIComponent(m[1]) : MODULES[0];
+    }
+
+    function unmountCurrent() {
+      if (!current) return;
+      try { if (current.mod.unmount) current.mod.unmount(current.body); } catch (e) {}
+      current = null;
+      mountEl.innerHTML = '';
+    }
+
+    function render(key) {
+      unmountCurrent();
+      var mod = EX[key];
+      if (!mod) {
+        mountEl.innerHTML = '<div class="ph-missing">No module registered for <b>' + key + '</b>. ' +
+          'Check the &lt;script&gt; tag and that the file calls window.EXPLAINERS["' + key + '"] = ...</div>';
+        return;
+      }
+      // Reproduce the exact chrome from assets/explainer-panel.js.
+      var panel = document.createElement('div');
+      panel.className = 'explainer-panel';
+      var head = document.createElement('div');
+      head.className = 'ex-head';
+      head.innerHTML = '<span class="ex-title">' + (mod.title || key) + '</span>' +
+        (mod.blurb ? '<span class="ex-blurb">' + mod.blurb + '</span>' : '');
+      var body = document.createElement('div');
+      body.className = 'ex-body';
+      panel.appendChild(head);
+      panel.appendChild(body);
+      mountEl.appendChild(panel);
+
+      current = { mod: mod, body: body };
+      try { mod.mount(body); }
+      catch (e) { body.innerHTML = '<p class="ex-error">mount() threw: ' + (e && e.message) + '</p>'; }
+    }
+
+    pick.addEventListener('change', function () {
+      var k = pick.value;
+      history.replaceState(null, '', '?key=' + encodeURIComponent(k));
+      render(k);
+    });
+    document.getElementById('ph-remount').addEventListener('click', function () { render(pick.value); });
+
+    var start = keyFromUrl();
+    if (MODULES.indexOf(start) >= 0) pick.value = start;
+    render(pick.value);
+  </script>
+</body>
+</html>
