@@ -174,6 +174,60 @@ th { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.08em; text-
 .explainer-panel .dots i.on { background: var(--ix); }
 .explainer-panel .ex-error { padding: 1rem 1.1rem; color: var(--bad); }
 
+/* Interactive explainer widgets — HTML-based panels stepped with next/prev.
+ * Light theme; reuses the paper's variables. Used by explainers that run real
+ * interactivity (inputs, buttons, live computation) instead of animated SVG. */
+.exw { padding: 1.1rem 1.3rem 1.3rem; font-size: 0.95rem; }
+.exw-nav { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 1rem; }
+.exw-nav button {
+  font-family: var(--mono); font-size: 0.8rem; cursor: pointer;
+  background: var(--ink); color: var(--paper); border: none; border-radius: 6px; padding: 0.45rem 0.9rem;
+}
+.exw-nav button:disabled { opacity: 0.3; cursor: default; }
+.exw-stepname { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ix); }
+.exw-dots { display: flex; gap: 0.4rem; margin-left: auto; }
+.exw-dots i { width: 9px; height: 9px; border-radius: 50%; background: var(--rule); transition: background 0.15s, transform 0.15s; }
+.exw-dots i.on { background: var(--ix); transform: scale(1.25); }
+.exw-step { display: none; }
+.exw-step.on { display: block; animation: ex-in 0.18s ease-out; }
+.exw-step h3 { margin: 0 0 0.6rem; font-size: 1.05rem; }
+.exw p { margin: 0 0 0.8rem; line-height: 1.5; }
+.exw-grid { display: grid; gap: 0.8rem; margin-bottom: 0.8rem; }
+@media (min-width: 540px) { .exw-grid.cols2 { grid-template-columns: 1fr 1fr; } .exw-grid.cols3 { grid-template-columns: 1fr 1fr 1fr; } }
+.exw-card { border: 1px solid var(--rule); border-radius: 10px; padding: 0.9rem; background: #fff; }
+.exw-label { font-family: var(--mono); font-size: 0.64rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 0.35rem; }
+.exw-input, .exw-textarea {
+  width: 100%; font-family: var(--mono); font-size: 0.88rem; padding: 0.5rem 0.6rem;
+  border: 1px solid var(--rule); border-radius: 6px; background: var(--paper); color: var(--ink);
+}
+.exw-input:focus, .exw-textarea:focus { outline: none; border-color: var(--ix); }
+.exw-textarea { resize: vertical; }
+.exw-btn {
+  font-family: var(--mono); font-size: 0.82rem; cursor: pointer; border: none; border-radius: 6px;
+  padding: 0.5rem 0.9rem; color: #fff; display: inline-flex; align-items: center; gap: 0.4rem; margin-top: 0.6rem;
+}
+.exw-btn:disabled { opacity: 0.5; cursor: default; }
+.exw-btn.sign { background: #6b4fa0; }
+.exw-btn.verify { background: var(--good); }
+.exw-btn.danger { background: var(--bad); }
+.exw-btn.ghost { background: none; color: var(--muted); border: 1px solid var(--rule); }
+.exw-key { border-radius: 8px; padding: 0.7rem 0.8rem; }
+.exw-key.priv { background: #ece6f5; border: 1px solid #6b4fa0; }
+.exw-key.pub { background: var(--accent-soft); border: 1px solid var(--accent); }
+.exw-key h4 { margin: 0 0 0.3rem; font-size: 0.92rem; }
+.exw-key p { margin: 0; font-size: 0.8rem; color: var(--muted); }
+.exw-hex { font-family: var(--mono); font-size: 0.72rem; word-break: break-all; line-height: 1.55; background: var(--faint); border-radius: 6px; padding: 0.5rem; }
+.exw-row { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; }
+.exw-result { display: flex; gap: 0.7rem; border-radius: 8px; padding: 0.8rem; margin-top: 0.8rem; }
+.exw-result.ok { background: #e8f0ec; border: 1px solid var(--good); }
+.exw-result.bad { background: #f9e3e1; border: 1px solid var(--bad); }
+.exw-result b { display: block; margin-bottom: 0.2rem; }
+.exw-result.ok b { color: var(--good); } .exw-result.bad b { color: var(--bad); }
+.exw-result .small { font-size: 0.82rem; color: var(--muted); }
+.exw-tag { font-family: var(--mono); font-size: 0.66rem; color: var(--bad); }
+.exw-note { font-size: 0.85rem; color: var(--muted); background: var(--faint); border-radius: 6px; padding: 0.6rem 0.7rem; }
+.exw-arrow { color: var(--muted); text-align: center; font-size: 1.1rem; }
+
 /* Explorable diagram frame + stepper */
 .explorable {
   border: 1px solid var(--rule); border-radius: 12px; margin: 2rem 0;
