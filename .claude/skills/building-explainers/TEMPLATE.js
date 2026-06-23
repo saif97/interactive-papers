@@ -1,80 +1,85 @@
 /* Explainer module template. Copy to assets/explainers/<concept-key>.js and fill in.
- * Reached from step 5 of SKILL.md. Mirror the structure of an existing explainer
- * (assets/explainers/digital-signatures.js) — this is the same shape, annotated.
+ * Reached from step 4 of SKILL.md. Read assets/explainers/digital-signatures.js for a
+ * full worked example (real Web Crypto + next/prev) — this is the same shape, trimmed.
  *
- * ── The contract (window.EXPLAINERS[key]) ──
- *   title     (required) panel heading
- *   blurb     (optional) one-line framing under the heading
- *   mount(panel)   (required) build the widget into the panel element
- *   unmount(panel) (optional) cleanup — call the stepper's destroy()
+ * Approach: interactive HTML panels stepped with next/prev. Layout is HTML/CSS
+ * (the .exw-* classes in style.css) — never hand-placed SVG coordinates. Run real
+ * computation when the concept allows (window.crypto.subtle, etc.).
  *
- * ── dg-* SVG palette (defined in assets/style.css; reuse, don't reinvent) ──
- *   .dg-card  white box (neutral)        .dg-key  accent-soft box, accent border (public key)
- *   .dg-priv  purple box (private key)   .dg-sig  orange box (signature)
- *   .dg-hash  green box (hash)           .dg-ghost red box (bad / attack)
- *   .dg-title 13px serif heading         .dg-label 12px mono label
- *   .dg-sub   10px muted caption         .dg-bad   red mono text
- *   .dg-arrow grey arrow  + modifiers .dg-arrow-sign (purple) / .dg-arrow-verify (green dashed)
- *   Distinct entity types: actors=.dg-card boxes, data=document shape (dog-eared path),
- *   keys=.dg-priv/.dg-key chips, results=green-bordered box. Make them LOOK different.
- *   Interactive chrome (panel, ⊕) is blue (--ix) and handled by the loader/CSS — not here.
+ * Contract (window.EXPLAINERS[key]):
+ *   title   (required) panel heading
+ *   blurb   (optional) one-line framing
+ *   mount(panel)   (required) render the steps + wire interactions into panel
+ *   unmount(panel) (optional) clear the panel and stop anything still running
+ *
+ * Useful .exw-* classes (see style.css): .exw wrapper, .exw-nav (prev/next),
+ * .exw-step (one per step; .on shows it), .exw-card, .exw-grid.cols2/.cols3,
+ * .exw-label, .exw-input, .exw-textarea, .exw-btn(.sign/.verify/.danger/.ghost),
+ * .exw-key.priv/.pub, .exw-hex, .exw-result.ok/.bad, .exw-note.
  */
 (function () {
   window.EXPLAINERS = window.EXPLAINERS || {};
-
-  // viewBox aspect ≤ ~2:1 (favour taller); leave margin so nothing clips at the edges.
-  var SVG =
-    '<figure class="explorable" aria-label="Interactive: <one-line description>">' +
-      '<div class="stage">' +
-        '<svg viewBox="0 0 760 360" role="img">' +
-          '<defs>' +
-            // arrow markers — one per arrow color you use
-            '<marker id="<KEY>-good" markerWidth="10" markerHeight="10" refX="7" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#2e7d4f"/></marker>' +
-          '</defs>' +
-
-          // Always-visible scaffolding (the cast / setup) goes here, e.g.:
-          // '<g id="<KEY>-actorA">...</g>' +
-
-          // One <g id> per beat that animates in; hidden at s0, revealed by the timeline.
-          '<g id="<KEY>-beat1"> ... </g>' +
-          '<g id="<KEY>-beat2"> ... </g>' +
-        '</svg>' +
-      '</div>' +
-      '<figcaption class="caption"></figcaption>' +
-      '<div class="controls"><button data-prev>&#8592; Prev</button><button data-next>Next &#8594;</button><button class="replay" data-replay>&#8634; Replay</button><div class="dots"></div></div>' +
-    '</figure>';
 
   window.EXPLAINERS["<concept-key>"] = {
     title: "<Concept name>",
     blurb: "<one-line framing — the thesis, compressed>",
 
     mount: function (panel) {
-      panel.innerHTML = SVG;
-      this._ex = window.Explorable.stepper({
-        root: panel.querySelector('.explorable'),
-        // One step per beat. steps[i] corresponds to timeline label s<i>.
-        // Caption = one sentence; the LAST caption lands the thesis and links onward.
-        steps: [
-          { label: '<beat 0 label>', text: '<setup — the cast, before anything happens>' },
-          { label: '<beat 1 label>', text: '<one idea>' },
-          { label: '<beat 2 label>', text: '<thesis lands. Link the next concept: <a href="#sec-N">term</a>.>' }
-        ],
-        // Build a paused timeline: addLabel('s0') at the initial state, then tween each
-        // beat in and addLabel('s1'), 's2', … in order. gsap.set() hides beats at s0.
-        build: function (gsap, svg) {
-          gsap.set(['#<KEY>-beat1', '#<KEY>-beat2'], { opacity: 0 });
-          var tl = gsap.timeline({ defaults: { ease: 'power2.out', duration: 0.5 } });
-          tl.addLabel('s0');
-          tl.to('#<KEY>-beat1', { opacity: 1 }); tl.addLabel('s1');
-          tl.to('#<KEY>-beat2', { opacity: 1 }); tl.addLabel('s2');
-          return tl;
-        }
-      });
+      panel.innerHTML =
+        '<div class="exw">' +
+          '<div class="exw-nav">' +
+            '<button data-prev disabled>← Prev</button>' +
+            '<button data-next>Next →</button>' +
+            '<span class="exw-stepname"></span>' +
+            '<span class="exw-dots"></span>' +
+          '</div>' +
+
+          // One .exw-step per step. Give each a concrete interaction the reader does.
+          '<div class="exw-step" data-step>' +
+            '<h3>1 · <step title></h3>' +
+            '<p><setup — who and what is involved></p>' +
+            // e.g. '<input class="exw-input" data-x value="...">' + a button that does something
+          '</div>' +
+
+          '<div class="exw-step" data-step>' +
+            '<h3>2 · <step title></h3>' +
+            '<p><one idea, with a real interaction></p>' +
+          '</div>' +
+
+          // Last step: state the thesis and link the next concept.
+          '<div class="exw-step" data-step>' +
+            '<h3><N> · What it proves</h3>' +
+            '<p class="exw-note"><thesis>. Link onward: <a href="#sec-N">term</a>.</p>' +
+          '</div>' +
+        '</div>';
+
+      // ── next/prev navigation (copy as-is; set names to match your steps) ──
+      var steps = Array.prototype.slice.call(panel.querySelectorAll('[data-step]'));
+      var names = ['<step 1 name>', '<step 2 name>', '<step N name>'];
+      var prevBtn = panel.querySelector('[data-prev]');
+      var nextBtn = panel.querySelector('[data-next]');
+      var nameEl = panel.querySelector('.exw-stepname');
+      var dotsWrap = panel.querySelector('.exw-dots');
+      steps.forEach(function (_, i) { var d = document.createElement('i'); d.addEventListener('click', function () { show(i); }); dotsWrap.appendChild(d); });
+      var dots = Array.prototype.slice.call(dotsWrap.children);
+      var cur = 0;
+      function show(i) {
+        cur = Math.max(0, Math.min(steps.length - 1, i));
+        steps.forEach(function (s, j) { s.classList.toggle('on', j === cur); });
+        dots.forEach(function (d, j) { d.classList.toggle('on', j === cur); });
+        nameEl.textContent = 'Step ' + (cur + 1) + ' / ' + steps.length + ' · ' + names[cur];
+        prevBtn.disabled = cur === 0;
+        nextBtn.disabled = cur === steps.length - 1;
+      }
+      prevBtn.addEventListener('click', function () { show(cur - 1); });
+      nextBtn.addEventListener('click', function () { show(cur + 1); });
+      show(0);
+
+      // ── wire each step's interactions here (query within `panel`) ──
+      // var input = panel.querySelector('[data-x]'); input.addEventListener('input', ...);
+      // Run real computation when the concept allows it.
     },
 
-    unmount: function () {
-      if (this._ex && this._ex.destroy) this._ex.destroy();
-      this._ex = null;
-    }
+    unmount: function (panel) { if (panel) panel.innerHTML = ''; }
   };
 })();
