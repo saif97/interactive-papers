@@ -228,6 +228,22 @@ th { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.08em; text-
 .exw-note { font-size: 0.85rem; color: var(--muted); background: var(--faint); border-radius: 6px; padding: 0.6rem 0.7rem; }
 .exw-arrow { color: var(--muted); text-align: center; font-size: 1.1rem; }
 
+/* End-to-end flow diagram — HTML/CSS boxes + arrows, wraps responsively */
+.exw-flow .exw-label { display: block; margin: 0.6rem 0 0.4rem; }
+.exw-flowrow { display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem; }
+.exw-fcol { display: flex; flex-direction: column; gap: 0.4rem; }
+.exw-fbox {
+  font-family: var(--mono); font-size: 0.78rem; padding: 0.45rem 0.6rem;
+  border: 1px solid var(--rule); border-radius: 8px; background: #fff; white-space: nowrap;
+}
+.exw-fbox.sign { background: #ece6f5; border-color: #6b4fa0; }
+.exw-fbox.verify { background: var(--ix-soft); border-color: var(--ix); }
+.exw-fbox.pub { background: #e8f0ec; border-color: var(--good); }
+.exw-fbox.ok { background: #e8f0ec; border-color: var(--good); color: var(--good); }
+.exw-fbox.bad { background: #f9e3e1; border-color: var(--bad); color: var(--bad); }
+.exw-farrow { color: var(--muted); font-family: var(--mono); font-size: 0.72rem; white-space: nowrap; }
+.exw-wire { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); border-top: 1px dashed var(--rule); margin: 0.7rem 0; padding-top: 0.5rem; text-align: center; }
+
 /* Explorable diagram frame + stepper */
 .explorable {
   border: 1px solid var(--rule); border-radius: 12px; margin: 2rem 0;

@@ -67,9 +67,20 @@
             '</div>' +
           '</div>' +
 
-          // Step 3 — sign & verify (real)
+          // Step 3 — hashing (real SHA-256)
           '<div class="exw-step" data-step>' +
-            '<h3>3 · Sign, then verify</h3>' +
+            '<h3>3 · Hash first, then sign</h3>' +
+            '<p>Signing a whole message directly is slow, so we first compress it into a fixed-size <b>digest</b> with a hash function. The signature is then computed over that digest. Change one character and the entire digest scrambles unpredictably — try it.</p>' +
+            '<div class="exw-card">' +
+              '<span class="exw-label">Message</span>' +
+              '<input class="exw-input" data-hashmsg value="Pay Alice 5 BTC">' +
+              '<div style="margin-top:0.6rem"><span class="exw-label">SHA-256 digest · 256 bits / 64 hex chars</span><div class="exw-hex" data-hashout>Hashing…</div></div>' +
+            '</div>' +
+          '</div>' +
+
+          // Step 4 — sign & verify (real)
+          '<div class="exw-step" data-step>' +
+            '<h3>4 · Sign, then verify</h3>' +
             '<p>Sign a message with the <span style="color:#6b4fa0">private key</span>, then verify with the <span style="color:var(--good)">public key</span>. After signing, edit the received message — verification will fail, because the bytes no longer match.</p>' +
             '<div class="exw-card">' +
               '<span class="exw-label">1 · Message to sign</span>' +
@@ -87,9 +98,33 @@
             '</div>' +
           '</div>' +
 
-          // Step 4 — what it proves (thesis)
+          // Step 5 — the whole flow, end to end (HTML/CSS diagram)
           '<div class="exw-step" data-step>' +
-            '<h3>4 · What it proves — and what it doesn\'t</h3>' +
+            '<h3>5 · The whole flow, end to end</h3>' +
+            '<p>Putting it together: the sender <b>hashes then signs</b> with the private key and ships the message alongside its signature. The receiver feeds the message, signature, and public key into verification, which re-hashes and checks the math — returning valid or invalid.</p>' +
+            '<div class="exw-flow">' +
+              '<span class="exw-label" style="color:#6b4fa0">Sender · signs with private key</span>' +
+              '<div class="exw-flowrow">' +
+                '<div class="exw-fbox">Message</div><span class="exw-farrow">→ SHA-256 →</span>' +
+                '<div class="exw-fbox">Digest</div><span class="exw-farrow">+ private key →</span>' +
+                '<div class="exw-fbox sign">Sign</div><span class="exw-farrow">→</span>' +
+                '<div class="exw-fbox">Signature</div>' +
+              '</div>' +
+              '<div class="exw-wire">sent over the wire: message + signature</div>' +
+              '<span class="exw-label" style="color:var(--good)">Receiver · verifies with public key</span>' +
+              '<div class="exw-flowrow">' +
+                '<div class="exw-fcol"><div class="exw-fbox">Message</div><div class="exw-fbox">Signature</div><div class="exw-fbox pub">Public key</div></div>' +
+                '<span class="exw-farrow">→</span>' +
+                '<div class="exw-fbox verify">Verify<br>re-hash + check</div>' +
+                '<span class="exw-farrow">→</span>' +
+                '<div class="exw-fcol"><div class="exw-fbox ok">✓ Valid</div><div class="exw-fbox bad">✗ Invalid</div></div>' +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+
+          // Step 6 — what it proves (thesis)
+          '<div class="exw-step" data-step>' +
+            '<h3>6 · What it proves — and what it doesn\'t</h3>' +
             '<div class="exw-grid cols3">' +
               '<div class="exw-card"><b style="color:var(--good)">Integrity</b><p style="margin:0.2rem 0 0;font-size:0.84rem;color:var(--muted)">One changed bit → verification fails.</p></div>' +
               '<div class="exw-card"><b style="color:var(--good)">Authenticity</b><p style="margin:0.2rem 0 0;font-size:0.84rem;color:var(--muted)">Only the private-key holder could have signed.</p></div>' +
@@ -101,7 +136,7 @@
 
       // ── navigation ──
       var steps = Array.prototype.slice.call(panel.querySelectorAll('[data-step]'));
-      var names = ['The problem', 'The key pair', 'Sign & verify', 'What it proves'];
+      var names = ['The problem', 'The key pair', 'Hashing', 'Sign & verify', 'End-to-end', 'What it proves'];
       var prevBtn = panel.querySelector('[data-prev]');
       var nextBtn = panel.querySelector('[data-next]');
       var nameEl = panel.querySelector('.exw-stepname');
@@ -144,6 +179,16 @@
         renderSeen();
       });
       renderSeen();
+
+      // ── step 3: live SHA-256 ──
+      var hashIn = panel.querySelector('[data-hashmsg]');
+      var hashOut = panel.querySelector('[data-hashout]');
+      function renderHash() {
+        var v = hashIn.value;
+        sha256Hex(v).then(function (h) { if (hashIn.value === v) hashOut.innerHTML = hexBlocks(h); });
+      }
+      hashIn.addEventListener('input', renderHash);
+      renderHash();
 
       // ── step 2: live keys ──
       var keysEl = panel.querySelector('[data-keys]');
