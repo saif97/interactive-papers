@@ -27,7 +27,17 @@ An explainer lives at `assets/explainers/<concept-key>.js`, registers into `wind
 
 6. **Verify it teaches (clarity QA).** You wrote it, so you can't read it cold. Run `/ui-qa` against the same harness URL with a **clarity checklist**: tell it to act as a first-time learner, step every panel, trigger each interaction, and report any term used before it's explained or any label that doesn't match what's shown. Treat the confusions it returns as a punch list: fix the real ones, then re-run step 5 on what you changed. _Done when:_ clarity QA returns PASS, or you have fixed the confusions it found.
 
-7. **Wire into the paper.** Add `<script src="assets/explainers/<key>.js"></script>` to `index.html` (before `explainer-panel.js`), confirm a keyword tagged `data-term="<key>"` exists in the text, and open the real page once to check the ⊕ marker appears and the panel opens below the paragraph. _Done when:_ clicking the keyword on the real page opens the verified panel.
+7. **Wire into the paper.** Add `<script src="assets/explainers/<key>.js"></script>` to `index.html` (before `explainer-panel.js`), then tag the keyword in the prose with `data-term="<key>"` (see **Wiring keywords** below for where). Open the real page once to check the chip appears and the panel opens below the paragraph. _Done when:_ clicking the keyword on the real page opens the verified panel.
+
+## Wiring keywords
+
+A keyword is "properly linked" when its `data-term` resolves to a glossary key (so the tooltip works) and, for keys with a module, opens the right panel. Check this by reading the source on the spot — don't build a linter, just look:
+
+- **Tag the right occurrence, not every one.** The same word can carry different meanings in different sentences ("hash" the verb vs. a block's hash; "chain" of signatures vs. the longest chain). Tag the spot where the concept is *introduced or best explained* — usually the first substantive mention or the abstract — and leave the rest plain. A keyword tagged in five places clutters the page and the reader stops noticing the chips.
+- **Match meaning, not just spelling.** Before tagging, read the sentence: only tag it if the word there means the concept the explainer teaches. A passing mention in a different sense should stay plain.
+- **Every `data-term` needs a glossary entry.** If `assets/glossary-data.js` has no key, the tooltip silently breaks — add the definition (skill step 2) or fix the typo.
+- **Every explainer module needs at least one tag that opens it.** A module no `data-term` references is dead — the reader can never reach it. After wiring, confirm `grep data-term=\"<key>\" index.html` finds your tag.
+- **Hover-only is a valid choice.** A keyword can have a glossary definition and no explainer — it stays a dotted hover term. Only add a module when the concept is worth a full interactive panel.
 
 ## Clarity checklist
 
