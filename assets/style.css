@@ -346,6 +346,14 @@ th { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.08em; text-
 .exw-lctag.active { color: var(--good); }
 .exw-lctag.stale { color: var(--muted); }
 
+/* Incentive widget (incentive.js) */
+.exw-cb { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; font-family: var(--mono); font-size: 0.82rem; margin-top: 0.3rem; }
+.exw-cb-from { color: var(--muted); }
+.exw-cb-to { color: var(--good); font-weight: 700; border: 1px solid var(--good); background: #e8f0ec; border-radius: 6px; padding: 0.2rem 0.5rem; }
+.exw-statgrid { display: flex; flex-wrap: wrap; gap: 1.4rem; }
+.exw-statgrid > div { display: flex; flex-direction: column; gap: 0.1rem; }
+.exw-big { font-family: var(--mono); font-size: 1.4rem; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; line-height: 1.1; }
+
 /* Explorable diagram frame + stepper */
 .explorable {
   border: 1px solid var(--rule); border-radius: 12px; margin: 2rem 0;
