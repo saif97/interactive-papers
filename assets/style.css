@@ -285,6 +285,52 @@ th { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.08em; text-
 .exw-blink { font-family: var(--mono); font-size: 0.62rem; color: var(--muted); text-align: center; padding: 0.2rem 0; }
 .exw-blink.broken { color: var(--bad); }
 
+/* Shared small helpers used across explainers */
+.exw .small { font-size: 0.82rem; color: var(--muted); }
+.exw .ok { color: var(--good); font-weight: 600; }
+.exw .bad { color: var(--bad); font-weight: 600; }
+.exw-mono { font-family: var(--mono); }
+
+/* Electronic-coin widget (electronic-coin.js) */
+.exw-person { display: inline-flex; flex-direction: column; gap: 0.1rem; border: 1px solid var(--rule); border-radius: 8px; padding: 0.35rem 0.6rem; margin: 0 0.4rem 0.4rem 0; background: #fff; }
+.exw-person .pn { font-weight: 600; font-size: 0.85rem; }
+.exw-person .pk { font-family: var(--mono); font-size: 0.62rem; color: var(--muted); }
+.exw-person.mint { border-color: var(--ix); }
+.exw-person.mallory { border-color: var(--bad); background: #f9e3e1; }
+.exw-coin { overflow-x: auto; }
+.exw-coinrow { display: flex; align-items: stretch; gap: 0; min-width: min-content; }
+.exw-tx { border: 1px solid var(--rule); border-radius: 10px; padding: 0.5rem 0.65rem; background: #fff; min-width: 9.5rem; flex: none; transition: background 0.15s, border-color 0.15s; }
+.exw-tx.ok { border-color: var(--good); background: #e8f0ec; }
+.exw-tx.bad { border-color: var(--bad); background: #f9e3e1; }
+.exw-tx .tx-head { font-family: var(--mono); font-size: 0.58rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.35rem; }
+.exw-tx .tx-line { display: flex; align-items: center; gap: 0.4rem; margin-top: 0.2rem; font-size: 0.78rem; }
+.exw-tx .tx-lab { font-family: var(--mono); font-size: 0.56rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); width: 4.2rem; flex: none; }
+.exw-tx .tx-hash { font-family: var(--mono); font-size: 0.66rem; color: var(--muted); word-break: break-all; }
+.exw-tx .tx-by { color: #6b4fa0; font-weight: 600; }
+.exw-tx .exw-redir { font-size: 0.72rem; padding: 0.1rem 0.25rem; height: auto; }
+.exw-clink { display: flex; align-items: center; font-family: var(--mono); font-size: 0.6rem; color: var(--muted); padding: 0 0.35rem; }
+.exw-clink.broken { color: var(--bad); }
+
+/* Gambler's-ruin random-walk widget (gamblers-ruin.js) */
+.exw-walk { border: 1px solid var(--rule); border-radius: 10px; padding: 0.7rem 0.8rem; background: var(--faint); }
+.exw-leadbox { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); display: flex; align-items: baseline; gap: 0.6rem; }
+.exw-lead { font-size: 1.9rem; font-weight: 700; color: var(--good); font-variant-numeric: tabular-nums; }
+.exw-lead.caught { color: var(--bad); }
+.exw-track { display: flex; flex-wrap: wrap; gap: 0.2rem; margin: 0.5rem 0; min-height: 1.4rem; }
+.exw-chip { font-family: var(--mono); font-size: 0.64rem; font-weight: 700; border-radius: 4px; padding: 0.05rem 0.3rem; color: #fff; }
+.exw-chip.up { background: var(--good); }
+.exw-chip.down { background: var(--bad); }
+.exw-chip.more { background: none; color: var(--muted); font-weight: 400; }
+.exw-walkmsg { font-size: 0.85rem; color: var(--ink); margin-top: 0.3rem; }
+.exw-controls2 { display: flex; flex-wrap: wrap; gap: 1.4rem; font-family: var(--mono); font-size: 0.82rem; margin-top: 0.4rem; }
+.exw-controls2 label { display: flex; flex-direction: column; gap: 0.2rem; }
+.exw-controls2 input[type=range] { width: 190px; }
+.exw-barrow { display: flex; align-items: center; gap: 0.6rem; margin: 0.35rem 0; }
+.exw-barlab { font-family: var(--mono); font-size: 0.72rem; width: 11rem; flex: none; color: var(--muted); }
+.exw-bartrack { flex: 1; height: 0.85rem; background: #fff; border: 1px solid var(--rule); border-radius: 4px; overflow: hidden; }
+.exw-bar { display: block; height: 100%; }
+.exw-barval { font-family: var(--mono); font-size: 0.75rem; width: 6rem; flex: none; text-align: right; }
+
 /* Explorable diagram frame + stepper */
 .explorable {
   border: 1px solid var(--rule); border-radius: 12px; margin: 2rem 0;
