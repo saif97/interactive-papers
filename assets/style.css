@@ -135,18 +135,35 @@ th { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.08em; text-
   box-shadow: 0 6px 24px rgba(0,0,0,0.25); opacity: 0; transition: opacity 0.12s;
 }
 #tooltip .t-term { font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); display: block; margin-bottom: 0.25rem; }
+#tooltip .t-cta { font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.04em; color: #8ab4f8; display: block; margin-top: 0.5rem; padding-top: 0.45rem; border-top: 1px solid rgba(255,255,255,0.14); }
 #tooltip.show { opacity: 1; }
 
-/* Keywords that also have a click-to-expand interactive explainer: keep the
- * dotted hover affordance but mark them with an accent underline + small ⊕. */
-.term.has-explainer { border-bottom: 1px solid var(--ix); cursor: pointer; }
-.term.has-explainer .ex-glyph {
-  font-family: var(--mono); font-size: 0.62em; vertical-align: super;
-  color: var(--ix); margin-left: 0.12em; opacity: 0.75;
+/* Keywords that also have a click-to-expand interactive explainer: render them
+ * as a small tappable chip — soft fill, border, rounded, with the ⊕ inside — so
+ * they read as a button, clearly distinct from the dotted hover-only terms. */
+.term.has-explainer {
+  border-bottom: none; cursor: pointer; color: var(--ix);
+  background: var(--ix-soft);
+  border: 1px solid #b9d4fb;
+  border-radius: 6px;
+  padding: 0.04em 0.42em;
+  /* Clone the fill/border/padding onto each fragment if the chip wraps a line. */
+  -webkit-box-decoration-break: clone; box-decoration-break: clone;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
 }
-.term.has-explainer:hover .ex-glyph,
+.term.has-explainer .ex-glyph {
+  font-family: var(--mono); font-size: 0.78em; vertical-align: baseline;
+  color: inherit; margin-left: 0.32em; opacity: 0.85;
+}
+.term.has-explainer:hover {
+  background: #cadffb; border-color: var(--ix);
+}
+.term.has-explainer:hover .ex-glyph { opacity: 1; }
+/* Open state: solid accent fill so the keyword whose panel is showing stands out. */
+.term.ex-active, .term.has-explainer.ex-active:hover {
+  background: var(--ix); border-color: var(--ix); color: #fff;
+}
 .term.ex-active .ex-glyph { opacity: 1; }
-.term.ex-active { background: var(--ix-soft); }
 
 /* The expandable panel inserted below a paragraph when its keyword is clicked. */
 .explainer-panel {

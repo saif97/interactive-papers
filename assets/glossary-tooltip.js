@@ -16,7 +16,11 @@
       var def = (dict[key] && dict[key].def) || el.getAttribute('data-def');
       var title = (dict[key] && dict[key].term) || key || '';
       if (!def) return;
-      tip.innerHTML = '<span class="t-term">' + title + '</span>' + def;
+      // Keywords wired to a click-to-expand explainer get an explicit call to
+      // act, so the reader knows the chip does more than show this definition.
+      var cta = el.classList.contains('has-explainer')
+        ? '<span class="t-cta">▸ press to open the interactive explainer</span>' : '';
+      tip.innerHTML = '<span class="t-term">' + title + '</span>' + def + cta;
       tip.classList.add('show');
       position(el);
     }

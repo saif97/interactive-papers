@@ -26,6 +26,7 @@
       try { if (mod && mod.unmount) mod.unmount(open.body); } catch (e) {}
       open.panel.remove();
       open.trigger.classList.remove('ex-active');
+      open.trigger.setAttribute('aria-expanded', 'false');
       open = null;
     }
 
@@ -63,6 +64,7 @@
       block.parentNode.insertBefore(panel, block.nextSibling);
 
       trigger.classList.add('ex-active');
+      trigger.setAttribute('aria-expanded', 'true');
       open = { trigger: trigger, panel: panel, body: body, key: key };
 
       try { mod.mount(body); }
@@ -75,12 +77,21 @@
       var key = el.getAttribute('data-term');
       if (!key || !EX[key] || el.classList.contains('has-explainer')) return;
       el.classList.add('has-explainer');
+      el.setAttribute('role', 'button');
+      el.setAttribute('aria-expanded', 'false');
       var glyph = document.createElement('span');
       glyph.className = 'ex-glyph';
       glyph.setAttribute('aria-hidden', 'true');
       glyph.textContent = '⊕'; // ⊕
       el.appendChild(glyph);
       el.addEventListener('click', function (e) { e.preventDefault(); toggle(el, key); });
+      // Keyboard: Enter or Space presses the chip, same as a click.
+      el.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+          e.preventDefault();
+          toggle(el, key);
+        }
+      });
     });
   }
 
