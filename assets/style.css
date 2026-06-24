@@ -244,6 +244,22 @@ th { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.08em; text-
 .exw-farrow { color: var(--muted); font-family: var(--mono); font-size: 0.72rem; white-space: nowrap; }
 .exw-wire { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); border-top: 1px dashed var(--rule); margin: 0.7rem 0; padding-top: 0.5rem; text-align: center; }
 
+/* Merkle tree widget (merkle-tree.js) */
+.exw-mtree { display: flex; flex-direction: column; align-items: center; gap: 0.55rem; }
+.exw-mrow { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; }
+.exw-mcap { font-family: var(--mono); font-size: 0.64rem; color: var(--muted); }
+.exw-mnode {
+  font-family: var(--mono); font-size: 0.72rem; text-align: center; min-width: 88px;
+  border: 1px solid var(--rule); border-radius: 8px; padding: 0.4rem 0.5rem; background: #fff;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.exw-mnode .lab { display: block; font-size: 0.56rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.2rem; }
+.exw-mnode.root { border-color: var(--ix); background: var(--ix-soft); }
+.exw-mnode.changed { border-color: var(--bad); background: #f9e3e1; color: var(--bad); }
+.exw-mnode.changed .lab { color: var(--bad); }
+.exw-mnode.branch { border-color: var(--accent); background: var(--accent-soft); }
+.exw-mnode.proven { border-color: var(--good); background: #e8f0ec; }
+
 /* Explorable diagram frame + stepper */
 .explorable {
   border: 1px solid var(--rule); border-radius: 12px; margin: 2rem 0;
