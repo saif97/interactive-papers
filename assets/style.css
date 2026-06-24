@@ -350,8 +350,16 @@ th { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.08em; text-
 
 /* Longest-chain widget (longest-chain.js) */
 .exw-lc { display: flex; flex-direction: column; gap: 0.4rem; }
-.exw-lcshared, .exw-lcrow { display: flex; align-items: center; flex-wrap: wrap; gap: 0.15rem; }
-.exw-lcfork { display: flex; flex-direction: column; gap: 0.5rem; border-left: 2px dashed var(--rule); padding-left: 0.7rem; margin-left: 0.3rem; }
+.exw-lcrow { display: flex; align-items: center; flex-wrap: wrap; gap: 0.15rem; }
+/* Fork view: a shared trunk on the left and a bracket that splits into the two
+ * branches. The bracket is the border-left on .exw-lcbranches; centering the
+ * tree vertically puts #2 at the midpoint between branch A and branch B. */
+.exw-lctree { display: flex; align-items: center; flex-wrap: wrap; gap: 0.2rem 0.1rem; }
+.exw-lctrunk { display: flex; flex-direction: column; gap: 0.3rem; align-items: flex-start; }
+.exw-lctrunkrow { display: flex; align-items: center; gap: 0.15rem; }
+.exw-lctrunk .exw-lctag { margin-left: 0; }
+.exw-lcbranches { display: flex; flex-direction: column; gap: 0.55rem; border-left: 2px solid var(--muted); padding-left: 0.85rem; margin-left: 0.1rem; }
+.exw-lcbranch { display: flex; align-items: center; flex-wrap: wrap; gap: 0.15rem; }
 .exw-lcblk { font-family: var(--mono); font-size: 0.72rem; font-weight: 700; border: 1px solid var(--rule); border-radius: 6px; padding: 0.3rem 0.5rem; background: #fff; color: var(--ink); }
 .exw-lcblk.shared { border-color: var(--muted); }
 .exw-lcblk.active { border-color: var(--good); background: #e8f0ec; color: var(--good); }

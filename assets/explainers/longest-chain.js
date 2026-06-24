@@ -109,27 +109,35 @@
           '<span class="exw-lctag">longest · everyone builds here</span></div>';
       }
 
-      // The fork view (steps 2 & 3). state = {a, b}.
+      // The fork view (steps 2 & 3). state = {a, b}. Drawn as a real fork: a
+      // shared trunk (#0 ← #1 ← #2) and a bracket at #2 splitting into branch A
+      // (top) and branch B (bottom), so the two branches visibly diverge from
+      // the same block.
       function renderFork(el, withResult) {
         var lenA = FORK + a.length, lenB = FORK + b.length;
         var winner = lenA > lenB ? 'A' : (lenB > lenA ? 'B' : null);
         var aCls = winner === 'A' ? 'active' : (winner === 'B' ? 'stale' : 'tie');
         var bCls = winner === 'B' ? 'active' : (winner === 'A' ? 'stale' : 'tie');
-        function branch(label, extra, cls, fromExtra) {
+        function branch(label, extra, cls) {
           var tag = cls === 'active' ? 'longest — adopted' : (cls === 'stale' ? 'orphaned' : 'tied');
           var blks = '';
           extra.forEach(function (_, i) {
-            blks += '<span class="exw-lcarrow">←</span><span class="exw-lcblk ' + cls + '">#' + (FORK + i) + label + '</span>';
+            if (i > 0) blks += '<span class="exw-lcarrow">←</span>';
+            blks += '<span class="exw-lcblk ' + cls + '">#' + (FORK + i) + label + '</span>';
           });
-          return '<div class="exw-lcrow ' + cls + '"><span class="exw-lcbl">branch ' + label + '</span>' + blks +
+          return '<div class="exw-lcbranch ' + cls + '"><span class="exw-lcarrow">←</span>' + blks +
             '<span class="exw-lctag ' + cls + '">len ' + (FORK + extra.length) + ' · ' + tag + '</span></div>';
         }
         el.innerHTML =
-          '<div class="exw-lcshared">' + blocks(FORK, { from: 0, cls: 'shared', trailLink: true }) +
-            '<span class="exw-lctag">shared history</span></div>' +
-          '<div class="exw-lcfork">' +
-            branch('A', a, aCls) +
-            branch('B', b, bCls) +
+          '<div class="exw-lctree">' +
+            '<div class="exw-lctrunk">' +
+              '<div class="exw-lctrunkrow">' + blocks(FORK, { from: 0, cls: 'shared' }) + '</div>' +
+              '<span class="exw-lctag">shared history · forks at #2</span>' +
+            '</div>' +
+            '<div class="exw-lcbranches">' +
+              branch('A', a, aCls) +
+              branch('B', b, bCls) +
+            '</div>' +
           '</div>';
         if (withResult) {
           var resEl = panel.querySelector('[data-lcresult]');
