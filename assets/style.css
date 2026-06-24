@@ -204,7 +204,7 @@ th { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.08em; text-
 .exw-textarea { resize: vertical; }
 .exw-btn {
   font-family: var(--mono); font-size: 0.82rem; cursor: pointer; border: none; border-radius: 6px;
-  padding: 0.5rem 0.9rem; color: #fff; display: inline-flex; align-items: center; gap: 0.4rem; margin-top: 0.6rem;
+  padding: 0.5rem 0.9rem; color: #fff; background: var(--ix); display: inline-flex; align-items: center; gap: 0.4rem; margin-top: 0.6rem;
 }
 .exw-btn:disabled { opacity: 0.5; cursor: default; }
 .exw-btn.sign { background: #6b4fa0; }
@@ -330,6 +330,21 @@ th { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.08em; text-
 .exw-bartrack { flex: 1; height: 0.85rem; background: #fff; border: 1px solid var(--rule); border-radius: 4px; overflow: hidden; }
 .exw-bar { display: block; height: 100%; }
 .exw-barval { font-family: var(--mono); font-size: 0.75rem; width: 6rem; flex: none; text-align: right; }
+
+/* Longest-chain widget (longest-chain.js) */
+.exw-lc { display: flex; flex-direction: column; gap: 0.4rem; }
+.exw-lcshared, .exw-lcrow { display: flex; align-items: center; flex-wrap: wrap; gap: 0.15rem; }
+.exw-lcfork { display: flex; flex-direction: column; gap: 0.5rem; border-left: 2px dashed var(--rule); padding-left: 0.7rem; margin-left: 0.3rem; }
+.exw-lcblk { font-family: var(--mono); font-size: 0.72rem; font-weight: 700; border: 1px solid var(--rule); border-radius: 6px; padding: 0.3rem 0.5rem; background: #fff; color: var(--ink); }
+.exw-lcblk.shared { border-color: var(--muted); }
+.exw-lcblk.active { border-color: var(--good); background: #e8f0ec; color: var(--good); }
+.exw-lcblk.stale { border-color: var(--rule); background: var(--faint); color: var(--muted); text-decoration: line-through; }
+.exw-lcblk.tie { border-color: var(--ix); background: var(--ix-soft); color: var(--ix); }
+.exw-lcarrow { font-family: var(--mono); color: var(--muted); font-size: 0.7rem; }
+.exw-lcbl { font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); margin-right: 0.3rem; }
+.exw-lctag { font-family: var(--mono); font-size: 0.62rem; color: var(--muted); margin-left: 0.5rem; }
+.exw-lctag.active { color: var(--good); }
+.exw-lctag.stale { color: var(--muted); }
 
 /* Explorable diagram frame + stepper */
 .explorable {
