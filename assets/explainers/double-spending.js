@@ -77,7 +77,7 @@
           // Step 3 — Sybil: vote-by-headcount fails
           '<div class="exw-step" data-step>' +
             '<h3>3 · Why “ask the network” fails</h3>' +
-            '<p>Naive fix: announce both transfers and let the majority vote on which they saw first. But in an open network, identities are free to create — so counting heads is meaningless. Add attacker identities and watch the vote flip.</p>' +
+            '<p>Naive fix: announce both transfers and let the majority vote on which they saw first. But in an open network anyone can mint unlimited identities for free, so an attacker can flood the vote with fakes — a Sybil attack — and counting heads becomes meaningless. Add attacker identities and watch the vote flip.</p>' +
             '<div class="exw-card">' +
               '<div class="exw-row"><span>Honest nodes — saw <b>Bob first</b></span><span class="exw-tag" style="color:var(--good)" data-honest></span></div>' +
               '<div class="exw-row" style="margin-top:0.4rem"><span>Attacker identities — vote <b>Carol first</b></span><span class="exw-tag" data-fake></span></div>' +
@@ -168,7 +168,7 @@
         tallyEl.innerHTML = '<div class="exw-result ' + (attackerWins ? 'bad' : 'ok') + '" style="margin-top:0.7rem"><div><b>' +
           (attackerWins ? '✗ “Carol first” wins' : '✓ “Bob first” wins') + '</b><span class="small">' +
           (attackerWins
-            ? 'The attacker out-voted everyone — for free. When anyone can mint unlimited identities, counting heads is meaningless. Flooding a vote with fake identities like this is called a Sybil attack.'
+            ? 'The attacker out-voted everyone — for free. Minting identities costs nothing, so a headcount can always be flipped.'
             : 'Honest majority holds — for now. But the attacker can keep adding identities at no cost.') +
           '</span></div></div>';
       }
