@@ -542,17 +542,31 @@ Explorable.stepper({
     { label: 'Repeat → a chain', text: 'Owner 2 transfers to Owner 3 the exact same way. Each transfer adds a link; a payee verifies the signatures all the way back to the origin. <i>This</i> is what “a coin is a chain of digital signatures” means.' },
     { label: 'The catch', text: 'But nothing here stops Owner 1 from <b>also</b> signing the same coin over to someone else. Signatures prove authorization — not <i>order</i>. That gap is the <b>double-spending</b> problem the rest of the paper solves. → read on below.' }
   ],
-  build: function (gsap) {
+  build: function (gsap, svg) {
     var hidden = ['#c2-frame','#c2-pk','#c2-hash','#linkA','#linkB','#pk1priv','#arrow-sign1','#c2-sig','#arrow-verify1','#g3','#g-ghost'];
     gsap.set(hidden, { opacity: 0 });
+    // Camera frames, one per step group. All share the SVG's aspect ratio
+    // (~2.043) so the rendered height never changes — only the framing pans and
+    // zooms to follow the content as later steps reveal it. Without this the
+    // early steps leave the bottom and right of the frame empty.
+    var F = {
+      top:  '24 23 576 282',   // steps 1-3: just Transaction 1 + 2, up top
+      mid:  '0 44 703 344',    // steps 4-5: pull back to show the signing below
+      wide: '24 0 911 446',    // step 6: pull back again for Transaction 3
+      full: '24 25 911 446'    // step 7: pan down to the double-spend ghost
+    };
+    gsap.set(svg, { attr: { viewBox: F.top } });
     var tl = gsap.timeline({ defaults: { ease: 'power2.out', duration: 0.5 } });
     tl.addLabel('s0');
     tl.to(['#c2-frame', '#c2-pk'], { opacity: 1 });            tl.addLabel('s1');
     tl.to(['#c2-hash', '#linkA', '#linkB'], { opacity: 1 });   tl.addLabel('s2');
-    tl.to(['#pk1priv', '#arrow-sign1', '#c2-sig'], { opacity: 1 }); tl.addLabel('s3');
+    tl.to(['#pk1priv', '#arrow-sign1', '#c2-sig'], { opacity: 1 });
+    tl.to(svg, { attr: { viewBox: F.mid } }, '<');             tl.addLabel('s3');
     tl.to('#arrow-verify1', { opacity: 1 });                   tl.addLabel('s4');
-    tl.to('#g3', { opacity: 1 });                              tl.addLabel('s5');
-    tl.to('#g-main', { opacity: 0.18 }).to('#g-ghost', { opacity: 1 }, '<'); tl.addLabel('s6');
+    tl.to('#g3', { opacity: 1 });
+    tl.to(svg, { attr: { viewBox: F.wide } }, '<');            tl.addLabel('s5');
+    tl.to('#g-main', { opacity: 0.18 }).to('#g-ghost', { opacity: 1 }, '<');
+    tl.to(svg, { attr: { viewBox: F.full } }, '<');            tl.addLabel('s6');
     return tl;
   }
 });
