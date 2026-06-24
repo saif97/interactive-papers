@@ -260,6 +260,31 @@ th { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.08em; text-
 .exw-mnode.branch { border-color: var(--accent); background: var(--accent-soft); }
 .exw-mnode.proven { border-color: var(--good); background: #e8f0ec; }
 
+/* Proof-of-work widget (proof-of-work.js) */
+.exw-hashbig { font-family: var(--mono); font-size: 0.82rem; word-break: break-all; line-height: 1.55; background: var(--faint); border-radius: 6px; padding: 0.55rem 0.6rem; }
+.exw-hashbig .z { color: var(--good); font-weight: 700; }
+.exw-hashbig .zno { color: var(--accent); font-weight: 700; }
+.exw-hashbig .rest { color: var(--ink); }
+.exw-counter { font-family: var(--mono); font-size: 1.5rem; font-weight: 700; color: var(--ix); font-variant-numeric: tabular-nums; }
+
+/* Chain-of-blocks widget (timestamp-server.js) */
+.exw-chain { display: flex; flex-direction: column-reverse; gap: 0; }
+.exw-block { border: 1px solid var(--rule); border-radius: 10px; padding: 0.55rem 0.7rem; background: #fff; transition: background 0.15s, border-color 0.15s; }
+.exw-block.genesis { border-style: dashed; }
+.exw-block.changed { border-color: var(--bad); background: #f9e3e1; }
+.exw-block .bk-head { font-family: var(--mono); font-size: 0.58rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.35rem; }
+.exw-block.changed .bk-head { color: var(--bad); }
+.exw-block .bk-field { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.25rem; }
+.exw-block .bk-lab { font-family: var(--mono); font-size: 0.58rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); width: 2.6rem; flex: none; }
+.exw-block .bk-prev, .exw-block .bk-hash { font-family: var(--mono); font-size: 0.72rem; word-break: break-all; }
+.exw-block .bk-prev { color: var(--muted); }
+.exw-block .bk-hash { color: var(--ix); }
+.exw-block.changed .bk-hash { color: var(--bad); }
+.exw-block .bk-data { font-size: 0.85rem; }
+.exw-block .bk-field .exw-input { margin: 0; }
+.exw-blink { font-family: var(--mono); font-size: 0.62rem; color: var(--muted); text-align: center; padding: 0.2rem 0; }
+.exw-blink.broken { color: var(--bad); }
+
 /* Explorable diagram frame + stepper */
 .explorable {
   border: 1px solid var(--rule); border-radius: 12px; margin: 2rem 0;
