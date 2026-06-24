@@ -354,6 +354,22 @@ th { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.08em; text-
 .exw-statgrid > div { display: flex; flex-direction: column; gap: 0.1rem; }
 .exw-big { font-family: var(--mono); font-size: 1.4rem; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; line-height: 1.1; }
 
+/* Inputs-outputs widget (inputs-outputs.js) */
+.exw-chunks { display: flex; align-items: center; flex-wrap: wrap; gap: 0.4rem; }
+.exw-chunk { font-family: var(--mono); font-size: 0.82rem; border: 1px solid var(--rule); border-radius: 8px; padding: 0.35rem 0.6rem; background: #fff; }
+.exw-chunk.pick { cursor: pointer; color: var(--ink); }
+.exw-chunk.pick.sel { border-color: var(--ix); background: var(--ix-soft); color: var(--ix); font-weight: 700; }
+.exw-txio { display: flex; align-items: stretch; gap: 0.8rem; flex-wrap: wrap; }
+.exw-txio .io-side { flex: 1; min-width: 11rem; border: 1px solid var(--rule); border-radius: 10px; padding: 0.5rem 0.65rem; background: #fff; }
+.exw-txio .io-cap { font-family: var(--mono); font-size: 0.58rem; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 0.4rem; }
+.exw-txio .io-item { font-family: var(--mono); font-size: 0.8rem; border-radius: 6px; padding: 0.25rem 0.45rem; margin-top: 0.25rem; background: var(--faint); }
+.exw-txio .io-item.in { border-left: 3px solid var(--muted); }
+.exw-txio .io-item.pay { border-left: 3px solid var(--ix); }
+.exw-txio .io-item.change { border-left: 3px solid var(--good); }
+.exw-txio .io-item.empty { color: var(--muted); background: none; }
+.exw-txio .io-fee { font-family: var(--mono); font-size: 0.74rem; color: var(--accent); margin-top: 0.4rem; }
+.exw-txio .io-eq { display: flex; align-items: center; font-family: var(--mono); color: var(--muted); }
+
 /* Explorable diagram frame + stepper */
 .explorable {
   border: 1px solid var(--rule); border-radius: 12px; margin: 2rem 0;
