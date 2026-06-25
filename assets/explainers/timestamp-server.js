@@ -93,24 +93,37 @@
             '<div class="exw-card" data-chain2></div>' +
           '</div>' +
 
-          // Step 3 — tamper
+          // Step 3 — why "timestamp"
           '<div class="exw-step" data-step>' +
-            '<h3>3 · Change one block, break all above it</h3>' +
+            '<h3>3 · Why it\'s called a timestamp</h3>' +
+            '<p>The paper calls this a <b>timestamp server</b> — but it never reads a clock. It proves two things instead. <b>Existence:</b> publishing a block\'s hash proves every item under it already existed, because they had to exist to go into the hash. <b>Order:</b> each block embeds the hash of the one before it, so the blocks fall in a fixed sequence — each block stamps "everything before me happened earlier." Publish a block\'s hash and see what it proves.</p>' +
+            '<div class="exw-card" data-tschain></div>' +
+            '<div class="exw-row" style="justify-content:flex-start;gap:0.6rem;flex-wrap:wrap;margin-top:0.7rem">' +
+              '<span class="exw-label" style="margin:0">Publish the hash of block</span>' +
+              '<input type="range" class="exw-input" data-tspub min="0" max="3" value="3" style="width:160px;padding:0">' +
+              '<span class="exw-mono" data-tspubv>3</span>' +
+            '</div>' +
+            '<div data-tsout></div>' +
+          '</div>' +
+
+          // Step 4 — tamper
+          '<div class="exw-step" data-step>' +
+            '<h3>4 · Change one block, break all above it</h3>' +
             '<p>Edit any block\'s data. Its hash changes, which is the next block\'s <b>prev</b>, which changes that block\'s hash too — so every block stacked above the one you touched turns red. Try editing the genesis block, then the top block, and compare the damage.</p>' +
             '<div class="exw-card" data-chain3></div>' +
             '<div data-tamperresult></div>' +
           '</div>' +
 
-          // Step 4 — thesis
+          // Step 5 — thesis
           '<div class="exw-step" data-step>' +
-            '<h3>4 · Why depth means safety</h3>' +
+            '<h3>5 · Why depth means safety</h3>' +
             '<p class="exw-note">Because each block commits to the one before it, you cannot quietly change old history — every block built on top would have to be rebuilt to match. And rebuilding is not free: each block\'s hash must satisfy <a href="#sec-4">proof-of-work</a>, so an attacker rewriting a buried block must redo the work of that block and every block after it, while honest miners keep extending the <a href="#sec-5">longest chain</a>. The deeper a transaction sits, the more work a rewrite costs — which is why waiting for confirmations makes a payment safe.</p>' +
           '</div>' +
         '</div>';
 
       // ── navigation ──
       var steps = Array.prototype.slice.call(panel.querySelectorAll('[data-step]'));
-      var names = ['One block', 'The chain', 'Tamper', 'Why depth'];
+      var names = ['One block', 'The chain', 'Why timestamp', 'Tamper', 'Why depth'];
       var prevBtn = panel.querySelector('[data-prev]');
       var nextBtn = panel.querySelector('[data-next]');
       var nameEl = panel.querySelector('.exw-stepname');
@@ -144,6 +157,25 @@
 
         // Step 2 — the full chain (read-only)
         renderChain(chain2El, committed, {});
+
+        // Step 3 — "why timestamp": publish a block's hash, see what it proves
+        renderChain(panel.querySelector('[data-tschain]'), committed, {});
+        var pub = panel.querySelector('[data-tspub]');
+        var pubV = panel.querySelector('[data-tspubv]');
+        var tsOut = panel.querySelector('[data-tsout]');
+        pub.max = committed.length - 1;
+        function renderPublish() {
+          var k = +pub.value;
+          pubV.textContent = k;
+          var existence = k === 0
+            ? 'Anyone who saw this knows block 0 (the genesis anchor) already existed — it is inside this hash. It is the start of the order.'
+            : 'Anyone who saw this knows blocks 0–' + k + ' already existed — they are inside this hash. And the order is fixed: block ' + k + ' sits after block ' + (k - 1) + ', because block ' + k + '\'s hash is built on block ' + (k - 1) + '\'s and cannot be reordered without breaking the chain.';
+          tsOut.innerHTML = '<div class="exw-result ok"><div><b>✓ Published: hash of block ' + k + ' = ' + short(committed[k].hash) + '</b>' +
+            '<span class="small">' + existence +
+            ' That ordered proof-of-existence, with no clock involved, is the "timestamp".</span></div></div>';
+        }
+        pub.addEventListener('input', renderPublish);
+        renderPublish();
 
         // Step 3 — editable. Re-render rebuilds the inputs, so we restore focus/caret
         // to the edited field and use a token so only the latest async result paints.
