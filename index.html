@@ -504,6 +504,20 @@ q=0.45   z=340</code></pre>
 <p>We have proposed a system for electronic transactions without relying on trust. We started with the usual framework of coins made from <span class="term" data-term="digital-signatures">digital signatures</span>, which provides strong control of ownership, but is incomplete without a way to prevent <span class="term" data-term="double-spending">double-spending</span>. To solve this, we proposed a peer-to-peer network using <span class="term" data-term="proof-of-work">proof-of-work</span> to record a public history of transactions that quickly becomes computationally impractical for an attacker to change if honest nodes control a majority of CPU power. The network is robust in its unstructured simplicity. Nodes work all at once with little coordination. They do not need to be identified, since messages are not routed to any particular place and only need to be delivered on a best effort basis. Nodes can leave and rejoin the network at will, accepting the proof-of-work chain as proof of what happened while they were gone. They vote with their <span class="term" data-term="cpu-power">CPU power</span>, expressing their acceptance of valid blocks by working on extending them and rejecting invalid blocks by refusing to work on them. Any needed rules and incentives can be enforced with this consensus mechanism.</p>
 </section>
 
+<section class="paper-section" id="sec-refs">
+<h2>References</h2>
+<ol class="paper-refs">
+  <li>W. Dai, "b-money," <a href="http://www.weidai.com/bmoney.txt">http://www.weidai.com/bmoney.txt</a>, 1998.</li>
+  <li>H. Massias, X.S. Avila, and J.-J. Quisquater, "Design of a secure timestamping service with minimal trust requirements," In 20th Symposium on Information Theory in the Benelux, May 1999.</li>
+  <li>S. Haber, W.S. Stornetta, "How to time-stamp a digital document," In Journal of Cryptology, vol 3, no 2, pages 99-111, 1991.</li>
+  <li>D. Bayer, S. Haber, W.S. Stornetta, "Improving the efficiency and reliability of digital time-stamping," In Sequences II: Methods in Communication, Security and Computer Science, pages 329-334, 1993.</li>
+  <li>S. Haber, W.S. Stornetta, "Secure names for bit-strings," In Proceedings of the 4th ACM Conference on Computer and Communications Security, pages 28-35, April 1997.</li>
+  <li>A. Back, "Hashcash - a denial of service counter-measure," <a href="http://www.hashcash.org/papers/hashcash.pdf">http://www.hashcash.org/papers/hashcash.pdf</a>, 2002.</li>
+  <li>R.C. Merkle, "Protocols for public key cryptosystems," In Proc. 1980 Symposium on Security and Privacy, IEEE Computer Society, pages 122-133, April 1980.</li>
+  <li>W. Feller, "An introduction to probability theory and its applications," 1957.</li>
+</ol>
+</section>
+
 </div><!-- /paper-body -->
 
 <div class="ask"><strong>About this page.</strong> This is the full Bitcoin whitepaper, reproduced <em>word for word</em>, with interactive diagrams layered on top to make the mechanics easier to grasp — step through each figure, mine a real block, and run the attack math. See also the companion <a href="lessons/0001-double-spend-and-proof-of-work.html">explainer on double-spend &amp; proof-of-work</a>.</div>
