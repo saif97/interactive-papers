@@ -149,7 +149,9 @@
               '<span class="exw-counter" data-count>0</span></div>' +
               '<div class="exw-row" data-rate-row style="margin-top:0.3rem;display:none"><span class="exw-label" style="margin:0">hash rate</span>' +
               '<span class="exw-counter" data-rate>0</span><span style="font-size:0.8rem;color:var(--muted);margin-left:0.35rem">hashes / sec</span></div>' +
-              '<div class="exw-row" style="margin-top:0.5rem;flex-wrap:wrap;gap:0.5rem">' +
+              '<div style="margin-top:0.6rem"><span class="exw-label">current hash</span>' +
+              '<div class="exw-hashbig" data-curhash style="color:var(--muted)">—</div></div>' +
+              '<div class="exw-row" style="margin-top:0.7rem;flex-wrap:wrap;gap:0.5rem">' +
                 '<button class="exw-btn verify" data-mine>Mine — slowed</button>' +
                 '<button class="exw-btn" data-mine-fast>Mine — full speed</button>' +
                 '<button class="exw-btn danger" data-stop disabled>Stop</button>' +
@@ -237,11 +239,13 @@
       var stopBtn = panel.querySelector('[data-stop]');
       var rateRow = panel.querySelector('[data-rate-row]');
       var rateEl = panel.querySelector('[data-rate]');
+      var curHashEl = panel.querySelector('[data-curhash]');
       var running = false, stopReq = false;
       function setRunning(on) { running = on; mineBtn.disabled = on; fastBtn.disabled = on; stopBtn.disabled = !on; }
       function resetMine() {
         stopReq = false; setRunning(false);
-        countEl.textContent = '0'; rateEl.textContent = '0'; rateRow.style.display = 'none'; r3El.innerHTML = '';
+        countEl.textContent = '0'; rateEl.textContent = '0'; rateRow.style.display = 'none';
+        curHashEl.innerHTML = '—'; curHashEl.style.color = 'var(--muted)'; r3El.innerHTML = '';
       }
       function stopped(attempts) {
         setRunning(false);
@@ -250,6 +254,7 @@
       function won(nonce, h, attempts, ms, fast) {
         setRunning(false);
         countEl.textContent = attempts.toLocaleString();
+        curHashEl.innerHTML = hashHtml(h, state.D); curHashEl.style.color = '';
         state.mined = { nonce: nonce, hash: h, attempts: attempts, D: state.D };
         var secs = (ms / 1000).toFixed(ms < 100 ? 2 : 1);
         var detail = fast
@@ -273,6 +278,7 @@
           nonce++;
         }
         countEl.textContent = attempts.toLocaleString();
+        curHashEl.innerHTML = hashHtml(h, state.D); curHashEl.style.color = '';
         setTimeout(function () { grind(nonce, attempts, t0); }, 16);
       }
       // Full-speed grind: hash CPU-bound for ~14ms per tick, then yield to
@@ -291,6 +297,7 @@
         var dt = (performance.now() - t0) / 1000;
         countEl.textContent = attempts.toLocaleString();
         rateEl.textContent = (dt > 0 ? Math.round(attempts / dt) : 0).toLocaleString();
+        curHashEl.innerHTML = hashHtml(h, state.D); curHashEl.style.color = '';
         setTimeout(function () { grindFast(nonce, attempts, t0); }, 0);
       }
       mineBtn.addEventListener('click', function () {

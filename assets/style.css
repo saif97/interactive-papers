@@ -130,6 +130,14 @@ th { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.08em; text-
 .gh-badge:hover { border-color: var(--accent); color: var(--accent); box-shadow: 0 1px 6px rgba(0,0,0,0.1); }
 .gh-badge svg { width: 15px; height: 15px; fill: currentColor; }
 .gh-note { font-size: 0.84rem; color: var(--muted); }
+
+/* Editorial pointer to an interactive explainer, set apart from the verbatim
+ * paper text. Used where an inline figure used to sit. */
+.explainer-cue {
+  font-size: 0.92rem; color: var(--muted);
+  border-left: 3px solid var(--ix-soft); padding-left: 0.95rem;
+  margin: 1.5rem 0;
+}
 @media print { .gh-cta { display: none; } }
 .paper-section { scroll-margin-top: 1.5rem; }
 
