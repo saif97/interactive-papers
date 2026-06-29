@@ -244,7 +244,10 @@
           r3El.innerHTML = '<div class="exw-result bad"><div><b>Stopped</b><span class="small">Gave up after ' + attempts.toLocaleString() + ' attempts.</span></div></div>';
           return;
         }
-        var budget = 4000;
+        // Hash a small batch per tick, then yield with a short delay, so the
+        // attempt counter visibly climbs instead of jumping to the answer —
+        // the grind reads as real work. Hashing is still real SHA-256.
+        var budget = 10;
         while (budget-- > 0) {
           var h = sha256hex(blockStr(nonce));
           attempts++;
@@ -261,7 +264,7 @@
           nonce++;
         }
         countEl.textContent = attempts.toLocaleString();
-        setTimeout(function () { grind(nonce, attempts, t0); }, 0);
+        setTimeout(function () { grind(nonce, attempts, t0); }, 16);
       }
       mineBtn.addEventListener('click', function () {
         if (running) return;
