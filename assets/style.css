@@ -171,6 +171,18 @@ th { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.08em; text-
 }
 .term.ex-active .ex-glyph { opacity: 1; }
 
+/* Inert chip used in the lede to show the reader what a clickable explainer
+ * chip looks like. Matches .term.has-explainer visually but is not interactive. */
+.chip-demo {
+  color: var(--ix); background: var(--ix-soft);
+  border: 1px solid #b9d4fb; border-radius: 6px;
+  padding: 0.04em 0.42em; font-style: normal; white-space: nowrap;
+}
+.chip-demo .ex-glyph {
+  font-family: var(--mono); font-size: 0.78em; color: inherit;
+  margin-left: 0.32em; opacity: 0.85;
+}
+
 /* The expandable panel inserted below a paragraph when its keyword is clicked. */
 .explainer-panel {
   border: 1px solid var(--ix); border-left-width: 3px; border-radius: 12px;
