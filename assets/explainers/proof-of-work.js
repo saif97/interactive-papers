@@ -84,7 +84,13 @@
   // The block being mined: a fixed payload; the nonce is the only knob.
   var PREV = sha256hex('genesis block');
   var DATA = 'Alice → Bob: 5 · Carol → Dan: 2';
-  function blockStr(nonce) { return PREV + '|' + DATA + '|nonce=' + nonce; }
+  function blockStr(nonce, salt) { return PREV + '|' + DATA + '|x=' + salt + '|nonce=' + nonce; }
+  // A fresh "extra-nonce" each mining run, so every run mines a different block
+  // (like a real miner varying the coinbase/timestamp) and lands on a different
+  // winning nonce and hash. Step 2's manual explorer uses a fixed one so typing
+  // stays stable.
+  var MANUAL_SALT = 'demo';
+  function freshSalt() { return Date.now().toString(36) + Math.floor(Math.random() * 1e9).toString(36); }
 
   // Difficulty options for the dropdown, in leading zero hex digits.
   // ~16^D tries on average — each extra zero is 16x more work.
@@ -156,7 +162,7 @@
                 '<button class="exw-btn" data-mine-fast>Mine — full speed</button>' +
                 '<button class="exw-btn danger" data-stop disabled>Stop</button>' +
               '</div>' +
-              '<div class="small" style="margin-top:0.6rem;color:var(--muted)">The slowed run lets you watch the count climb. <b>Full speed</b> shows the real rate your browser actually hits — and real mining hardware does millions of hashes a second.</div>' +
+              '<div class="small" style="margin-top:0.6rem;color:var(--muted)">The slowed run lets you watch the count climb. <b>Full speed</b> shows the real rate your browser actually hits — real mining hardware does millions a second. Each run mines a fresh block (a new extra-nonce), so the winning nonce and hash differ every time.</div>' +
             '</div>' +
             '<div data-r3></div>' +
           '</div>' +
@@ -219,7 +225,7 @@
       var r2El = panel.querySelector('[data-r2]');
       function renderGuess() {
         var n = parseInt(nonceEl.value, 10); if (isNaN(n)) n = 0;
-        var h = sha256hex(blockStr(n));
+        var h = sha256hex(blockStr(n, MANUAL_SALT));
         var z = lz(h), ok = z >= state.D;
         h2El.innerHTML = hashHtml(h, state.D);
         r2El.innerHTML = '<div class="exw-result ' + (ok ? 'ok' : 'bad') + '"><div><b>' +
@@ -251,11 +257,11 @@
         setRunning(false);
         r3El.innerHTML = '<div class="exw-result bad"><div><b>Stopped</b><span class="small">Gave up after ' + attempts.toLocaleString() + ' attempts.</span></div></div>';
       }
-      function won(nonce, h, attempts, ms, fast) {
+      function won(nonce, h, attempts, ms, fast, salt) {
         setRunning(false);
         countEl.textContent = attempts.toLocaleString();
         curHashEl.innerHTML = hashHtml(h, state.D); curHashEl.style.color = '';
-        state.mined = { nonce: nonce, hash: h, attempts: attempts, D: state.D };
+        state.mined = { nonce: nonce, hash: h, attempts: attempts, D: state.D, salt: salt };
         var secs = (ms / 1000).toFixed(ms < 100 ? 2 : 1);
         var detail = fast
           ? 'after <b>' + attempts.toLocaleString() + '</b> hashes in ' + secs + 's — about <b>' + (ms > 0 ? Math.round(attempts / (ms / 1000)).toLocaleString() : '∞') + '</b> hashes/sec in your browser. Real mining hardware does millions a second.'
@@ -268,29 +274,33 @@
       // visibly climbs instead of jumping to the answer. Hashing is real
       // SHA-256; the batch scales with difficulty (~16^D) so every setting
       // stays watchable (~1-10s) rather than crawling for minutes at 5 zeros.
-      function grind(nonce, attempts, t0) {
+      function grind(nonce, attempts, t0, salt) {
         if (stopReq) { stopped(attempts); return; }
-        var budget = Math.max(10, Math.round(Math.pow(16, state.D) / 1170));
+        // Effective rate stays watchable and always below the full-speed rate;
+        // the batch scales with the real ~16^D expected work, capped so high
+        // difficulties still climb (in big jumps) without going faster than a
+        // genuine full-speed run.
+        var budget = Math.max(10, Math.min(1500, Math.round(Math.pow(16, state.D) / 200)));
         while (budget-- > 0) {
-          var h = sha256hex(blockStr(nonce));
+          var h = sha256hex(blockStr(nonce, salt));
           attempts++;
-          if (lz(h) >= state.D) { won(nonce, h, attempts, Date.now() - t0, false); return; }
+          if (lz(h) >= state.D) { won(nonce, h, attempts, Date.now() - t0, false, salt); return; }
           nonce++;
         }
         countEl.textContent = attempts.toLocaleString();
         curHashEl.innerHTML = hashHtml(h, state.D); curHashEl.style.color = '';
-        setTimeout(function () { grind(nonce, attempts, t0); }, 16);
+        setTimeout(function () { grind(nonce, attempts, t0, salt); }, 16);
       }
       // Full-speed grind: hash CPU-bound for ~14ms per tick, then yield to
       // paint, reporting the real hash rate the browser actually achieves.
-      function grindFast(nonce, attempts, t0) {
+      function grindFast(nonce, attempts, t0, salt) {
         if (stopReq) { stopped(attempts); return; }
         var tickStart = performance.now();
         do {
           for (var i = 0; i < 250; i++) {
-            var h = sha256hex(blockStr(nonce));
+            var h = sha256hex(blockStr(nonce, salt));
             attempts++;
-            if (lz(h) >= state.D) { won(nonce, h, attempts, performance.now() - t0, true); return; }
+            if (lz(h) >= state.D) { won(nonce, h, attempts, performance.now() - t0, true, salt); return; }
             nonce++;
           }
         } while (performance.now() - tickStart < 14);
@@ -298,17 +308,17 @@
         countEl.textContent = attempts.toLocaleString();
         rateEl.textContent = (dt > 0 ? Math.round(attempts / dt) : 0).toLocaleString();
         curHashEl.innerHTML = hashHtml(h, state.D); curHashEl.style.color = '';
-        setTimeout(function () { grindFast(nonce, attempts, t0); }, 0);
+        setTimeout(function () { grindFast(nonce, attempts, t0, salt); }, 0);
       }
       mineBtn.addEventListener('click', function () {
         if (running) return;
         stopReq = false; setRunning(true); r3El.innerHTML = ''; rateRow.style.display = 'none';
-        grind(0, 0, Date.now());
+        grind(0, 0, Date.now(), freshSalt());
       });
       fastBtn.addEventListener('click', function () {
         if (running) return;
         stopReq = false; setRunning(true); r3El.innerHTML = ''; rateRow.style.display = ''; rateEl.textContent = '0';
-        grindFast(0, 0, performance.now());
+        grindFast(0, 0, performance.now(), freshSalt());
       });
       stopBtn.addEventListener('click', function () { stopReq = true; });
 
@@ -321,7 +331,7 @@
           return;
         }
         var m = state.mined;
-        var h = sha256hex(blockStr(m.nonce));     // exactly one hash
+        var h = sha256hex(blockStr(m.nonce, m.salt));     // exactly one hash
         var ok = h === m.hash && lz(h) >= m.D;
         rvEl.innerHTML = '<div class="exw-result ' + (ok ? 'ok' : 'bad') + '"><div><b>' +
           (ok ? '✓ Valid in one hash' : '✗ Invalid') + '</b>' +
