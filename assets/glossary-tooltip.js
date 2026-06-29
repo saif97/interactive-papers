@@ -19,7 +19,7 @@
       // Keywords wired to a click-to-expand explainer get an explicit call to
       // act, so the reader knows the chip does more than show this definition.
       var cta = el.classList.contains('has-explainer')
-        ? '<span class="t-cta">▸ press to open the interactive explainer</span>' : '';
+        ? '<span class="t-cta">▸ click to open the interactive explainer</span>' : '';
       tip.innerHTML = '<span class="t-term">' + title + '</span>' + def + cta;
       tip.classList.add('show');
       position(el);
