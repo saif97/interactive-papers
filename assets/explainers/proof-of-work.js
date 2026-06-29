@@ -147,11 +147,14 @@
             '<div class="exw-card">' +
               '<div class="exw-row"><span class="exw-label" style="margin:0">attempts</span>' +
               '<span class="exw-counter" data-count>0</span></div>' +
-              '<div class="exw-row" style="margin-top:0.5rem">' +
-                '<button class="exw-btn verify" data-mine>⛏ Mine this block</button>' +
+              '<div class="exw-row" data-rate-row style="margin-top:0.3rem;display:none"><span class="exw-label" style="margin:0">hash rate</span>' +
+              '<span class="exw-counter" data-rate>0</span><span style="font-size:0.8rem;color:var(--muted);margin-left:0.35rem">hashes / sec</span></div>' +
+              '<div class="exw-row" style="margin-top:0.5rem;flex-wrap:wrap;gap:0.5rem">' +
+                '<button class="exw-btn verify" data-mine>Mine — slowed</button>' +
+                '<button class="exw-btn" data-mine-fast>Mine — full speed</button>' +
                 '<button class="exw-btn danger" data-stop disabled>Stop</button>' +
               '</div>' +
-              '<div class="small" style="margin-top:0.6rem;color:var(--muted)">Deliberately slowed so you can watch the count climb — real hardware does millions of these hashes a second.</div>' +
+              '<div class="small" style="margin-top:0.6rem;color:var(--muted)">The slowed run lets you watch the count climb. <b>Full speed</b> shows the real rate your browser actually hits — and real mining hardware does millions of hashes a second.</div>' +
             '</div>' +
             '<div data-r3></div>' +
           '</div>' +
@@ -230,43 +233,75 @@
       var countEl = panel.querySelector('[data-count]');
       var r3El = panel.querySelector('[data-r3]');
       var mineBtn = panel.querySelector('[data-mine]');
+      var fastBtn = panel.querySelector('[data-mine-fast]');
       var stopBtn = panel.querySelector('[data-stop]');
+      var rateRow = panel.querySelector('[data-rate-row]');
+      var rateEl = panel.querySelector('[data-rate]');
       var running = false, stopReq = false;
-      function resetMine() { running = false; stopReq = false; countEl.textContent = '0'; r3El.innerHTML = ''; mineBtn.disabled = false; stopBtn.disabled = true; }
+      function setRunning(on) { running = on; mineBtn.disabled = on; fastBtn.disabled = on; stopBtn.disabled = !on; }
+      function resetMine() {
+        stopReq = false; setRunning(false);
+        countEl.textContent = '0'; rateEl.textContent = '0'; rateRow.style.display = 'none'; r3El.innerHTML = '';
+      }
+      function stopped(attempts) {
+        setRunning(false);
+        r3El.innerHTML = '<div class="exw-result bad"><div><b>Stopped</b><span class="small">Gave up after ' + attempts.toLocaleString() + ' attempts.</span></div></div>';
+      }
+      function won(nonce, h, attempts, ms, fast) {
+        setRunning(false);
+        countEl.textContent = attempts.toLocaleString();
+        state.mined = { nonce: nonce, hash: h, attempts: attempts, D: state.D };
+        var secs = (ms / 1000).toFixed(ms < 100 ? 2 : 1);
+        var detail = fast
+          ? 'after <b>' + attempts.toLocaleString() + '</b> hashes in ' + secs + 's — about <b>' + (ms > 0 ? Math.round(attempts / (ms / 1000)).toLocaleString() : '∞') + '</b> hashes/sec in your browser. Real mining hardware does millions a second.'
+          : 'after <b>' + attempts.toLocaleString() + '</b> hashes (' + secs + 's at this slowed pace).';
+        r3El.innerHTML = '<div class="exw-result ok"><div><b>✓ Block mined</b>' +
+          '<span class="small">Winning nonce <b>' + nonce + '</b> ' + detail + '</span>' +
+          '<div class="exw-hashbig" style="margin-top:0.4rem">' + hashHtml(h, state.D) + '</div></div></div>';
+      }
+      // Slowed grind: a small batch per tick + a delay, so the attempt counter
+      // visibly climbs instead of jumping to the answer. Hashing is real
+      // SHA-256; the batch scales with difficulty (~16^D) so every setting
+      // stays watchable (~1-10s) rather than crawling for minutes at 5 zeros.
       function grind(nonce, attempts, t0) {
-        if (stopReq) {
-          running = false; mineBtn.disabled = false; stopBtn.disabled = true;
-          r3El.innerHTML = '<div class="exw-result bad"><div><b>Stopped</b><span class="small">Gave up after ' + attempts.toLocaleString() + ' attempts.</span></div></div>';
-          return;
-        }
-        // Hash a batch per tick, then yield with a short delay, so the attempt
-        // counter visibly climbs instead of jumping to the answer — the grind
-        // reads as real work. Hashing is still real SHA-256. The batch scales
-        // with difficulty (~16^D expected tries) so every setting stays
-        // watchable (~1-10s) rather than crawling for minutes at 5 zeros.
+        if (stopReq) { stopped(attempts); return; }
         var budget = Math.max(10, Math.round(Math.pow(16, state.D) / 1170));
         while (budget-- > 0) {
           var h = sha256hex(blockStr(nonce));
           attempts++;
-          if (lz(h) >= state.D) {
-            running = false; mineBtn.disabled = false; stopBtn.disabled = true;
-            countEl.textContent = attempts.toLocaleString();
-            state.mined = { nonce: nonce, hash: h, attempts: attempts, D: state.D };
-            var ms = Date.now() - t0;
-            r3El.innerHTML = '<div class="exw-result ok"><div><b>✓ Block mined</b>' +
-              '<span class="small">Winning nonce <b>' + nonce + '</b> after <b>' + attempts.toLocaleString() + '</b> hashes (' + (ms / 1000).toFixed(1) + 's at this slowed pace).</span>' +
-              '<div class="exw-hashbig" style="margin-top:0.4rem">' + hashHtml(h, state.D) + '</div></div></div>';
-            return;
-          }
+          if (lz(h) >= state.D) { won(nonce, h, attempts, Date.now() - t0, false); return; }
           nonce++;
         }
         countEl.textContent = attempts.toLocaleString();
         setTimeout(function () { grind(nonce, attempts, t0); }, 16);
       }
+      // Full-speed grind: hash CPU-bound for ~14ms per tick, then yield to
+      // paint, reporting the real hash rate the browser actually achieves.
+      function grindFast(nonce, attempts, t0) {
+        if (stopReq) { stopped(attempts); return; }
+        var tickStart = performance.now();
+        do {
+          for (var i = 0; i < 250; i++) {
+            var h = sha256hex(blockStr(nonce));
+            attempts++;
+            if (lz(h) >= state.D) { won(nonce, h, attempts, performance.now() - t0, true); return; }
+            nonce++;
+          }
+        } while (performance.now() - tickStart < 14);
+        var dt = (performance.now() - t0) / 1000;
+        countEl.textContent = attempts.toLocaleString();
+        rateEl.textContent = (dt > 0 ? Math.round(attempts / dt) : 0).toLocaleString();
+        setTimeout(function () { grindFast(nonce, attempts, t0); }, 0);
+      }
       mineBtn.addEventListener('click', function () {
         if (running) return;
-        running = true; stopReq = false; mineBtn.disabled = true; stopBtn.disabled = false; r3El.innerHTML = '';
+        stopReq = false; setRunning(true); r3El.innerHTML = ''; rateRow.style.display = 'none';
         grind(0, 0, Date.now());
+      });
+      fastBtn.addEventListener('click', function () {
+        if (running) return;
+        stopReq = false; setRunning(true); r3El.innerHTML = ''; rateRow.style.display = ''; rateEl.textContent = '0';
+        grindFast(0, 0, performance.now());
       });
       stopBtn.addEventListener('click', function () { stopReq = true; });
 

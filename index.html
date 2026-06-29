@@ -178,21 +178,6 @@
 <p>To implement a distributed timestamp server on a peer-to-peer basis, we will need to use a <span class="term" data-term="proof-of-work">proof-of-work</span> system similar to Adam Back's <span class="term" data-term="hashcash">Hashcash</span> [6], rather than newspaper or Usenet posts. The proof-of-work involves scanning for a value that when hashed, such as with SHA-256, the hash begins with a number of zero bits. The average work required is exponential in the number of zero bits required and can be verified by executing a single hash.</p>
 <p>For our timestamp network, we implement the proof-of-work by incrementing a <span class="term" data-term="nonce">nonce</span> in the block until a value is found that gives the block's hash the required zero bits. Once the CPU effort has been expended to make it satisfy the proof-of-work, the block cannot be changed without redoing the work. As later blocks are chained after it, the work to change the block would include redoing all the blocks after it.</p>
 
-<div class="explorable" id="miner">
-  <div class="caption" style="border-top:none;border-bottom:1px solid var(--rule)"><span class="step-label">Live miner · real SHA-256 in your browser</span>Pick a difficulty and press <b>Mine</b>. The browser increments the nonce and hashes the block over and over until the hash starts with the required number of zeros. Verifying the answer is one hash; finding it is millions.</div>
-  <div style="padding:1.1rem 1.4rem;font-family:var(--mono);font-size:0.85rem">
-    <div style="margin-bottom:0.6rem">block data: <code>"Owner1 → Owner2 : 1 coin"</code> · prev hash: <code>00000a1f9c…</code></div>
-    <div style="margin-bottom:0.6rem">difficulty (leading zeros):
-      <select id="m-diff"><option value="1">1</option><option value="2">2</option><option value="3" selected>3</option><option value="4">4</option><option value="5">5</option></select>
-      <button id="m-go" style="font-family:var(--mono);background:var(--ink);color:var(--paper);border:none;border-radius:6px;padding:0.35rem 0.9rem;cursor:pointer">Mine ⛏</button>
-      <button id="m-stop" style="font-family:var(--mono);background:none;color:var(--muted);border:1px solid var(--rule);border-radius:6px;padding:0.35rem 0.9rem;cursor:pointer" disabled>Stop</button>
-    </div>
-    <div>nonce: <b id="m-nonce">0</b> &nbsp;·&nbsp; tries: <b id="m-tries">0</b> &nbsp;·&nbsp; <b id="m-rate">0</b> H/s</div>
-    <div style="margin-top:0.5rem;word-break:break-all">SHA-256: <span id="m-hash" style="color:var(--muted)">—</span></div>
-    <div id="m-status" style="margin-top:0.5rem;font-family:var(--serif);min-height:1.4em"></div>
-  </div>
-</div>
-
 <p>The proof-of-work also solves the problem of determining representation in majority decision making. If the majority were based on one-IP-address-one-vote, it could be subverted by anyone able to allocate many IPs. Proof-of-work is essentially <span class="term" data-term="one-cpu-one-vote">one-CPU-one-vote</span>. The majority decision is represented by the <span class="term" data-term="longest-chain">longest chain</span>, which has the greatest proof-of-work effort invested in it. If a majority of CPU power is controlled by honest nodes, the honest chain will grow the fastest and outpace any competing chains. To modify a past block, an attacker would have to redo the proof-of-work of the block and all blocks after it and then catch up with and surpass the work of the honest nodes. We will show later that the probability of a slower attacker catching up diminishes exponentially as subsequent blocks are added.</p>
 <p>To compensate for increasing hardware speed and varying interest in running nodes over time, the proof-of-work <span class="term" data-term="difficulty">difficulty</span> is determined by a moving average targeting an average number of blocks per hour. If they're generated too fast, the difficulty increases.</p>
 </section>
@@ -764,48 +749,6 @@ Explorable.stepper({
   }
   a.addEventListener('click', function () { show('trad'); });
   b.addEventListener('click', function () { show('new'); });
-})();
-
-// ── §4 live proof-of-work miner ──
-(function () {
-  var enc = new TextEncoder();
-  var nonceEl = document.getElementById('m-nonce'), triesEl = document.getElementById('m-tries'),
-      rateEl = document.getElementById('m-rate'), hashEl = document.getElementById('m-hash'),
-      statusEl = document.getElementById('m-status'), diffEl = document.getElementById('m-diff'),
-      goBtn = document.getElementById('m-go'), stopBtn = document.getElementById('m-stop');
-  var running = false, nonce = 0, tries = 0, t0 = 0;
-  var prefix = 'Owner1 -> Owner2 : 1 coin | prev 00000a1f9c | nonce ';
-  function toHex(buf) { var v = new Uint8Array(buf), s = ''; for (var i = 0; i < v.length; i++) s += v[i].toString(16).padStart(2, '0'); return s; }
-  async function mineBatch(zeros) {
-    var target = '0'.repeat(zeros), batch = 800;
-    while (batch-- > 0 && running) {
-      var h = toHex(await crypto.subtle.digest('SHA-256', enc.encode(prefix + nonce)));
-      tries++;
-      if (h.slice(0, zeros) === target) {
-        nonceEl.textContent = nonce; triesEl.textContent = tries.toLocaleString();
-        hashEl.innerHTML = '<b style="color:#2e7d4f">' + h.slice(0, zeros) + '</b>' + h.slice(zeros);
-        statusEl.innerHTML = '✓ <b style="color:#2e7d4f">Block mined!</b> Found a hash with ' + zeros + ' leading zero' + (zeros > 1 ? 's' : '') + ' after ' + tries.toLocaleString() + ' tries. Verifying it took just one hash.';
-        stop(); return;
-      }
-      nonce++;
-    }
-    if (running) {
-      var dt = (performance.now() - t0) / 1000;
-      nonceEl.textContent = nonce; triesEl.textContent = tries.toLocaleString();
-      rateEl.textContent = Math.round(tries / dt).toLocaleString();
-      hashEl.textContent = toHex(await crypto.subtle.digest('SHA-256', enc.encode(prefix + nonce))).slice(0, 32) + '…';
-      requestAnimationFrame(function () { mineBatch(zeros); });
-    }
-  }
-  function start() {
-    running = true; nonce = 0; tries = 0; t0 = performance.now();
-    goBtn.disabled = true; stopBtn.disabled = false; diffEl.disabled = true;
-    statusEl.innerHTML = '<span style="color:var(--accent)">mining…</span>';
-    mineBatch(parseInt(diffEl.value, 10));
-  }
-  function stop() { running = false; goBtn.disabled = false; stopBtn.disabled = true; diffEl.disabled = false; }
-  goBtn.addEventListener('click', start);
-  stopBtn.addEventListener('click', function () { stop(); statusEl.textContent = 'stopped.'; });
 })();
 
 // ── §11 attacker probability calculator (Nakamoto's algorithm, ported) ──
