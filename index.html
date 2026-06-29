@@ -329,34 +329,17 @@
 <p>Although it would be possible to handle coins individually, it would be unwieldy to make a separate transaction for every cent in a transfer. To allow value to be split and combined, transactions contain multiple <span class="term" data-term="inputs-outputs">inputs and outputs</span>. Normally there will be either a single input from a larger previous transaction or multiple inputs combining smaller amounts, and at most two outputs: one for the payment, and one returning the change, if any, back to the sender.</p>
 
 <figure class="explorable" id="fig-io">
-  <div class="stage">
-    <svg viewBox="0 0 960 280" role="img">
-      <defs><marker id="io-ah" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#6b6356"/></marker></defs>
-      <rect class="dg-card" x="360" y="60" width="240" height="160" rx="8"/>
-      <rect class="dg-card dg-card-head" x="360" y="60" width="240" height="28" rx="8"/><rect class="dg-card-head" x="360" y="76" width="240" height="12"/>
-      <text class="dg-title" x="480" y="80" text-anchor="middle">Transaction</text>
-      <g id="io-in">
-        <rect class="dg-sig" x="376" y="104" width="100" height="32" rx="4"/><text class="dg-label" x="426" y="125" text-anchor="middle">In</text>
-        <rect class="dg-sig" x="376" y="144" width="100" height="32" rx="4"/><text class="dg-label" x="426" y="165" text-anchor="middle">In</text>
-        <text class="dg-sub" x="426" y="198" text-anchor="middle">…</text>
-      </g>
-      <g id="io-out">
-        <rect class="dg-key" x="490" y="104" width="100" height="32" rx="4"/><text class="dg-label" x="540" y="125" text-anchor="middle">Out</text>
-        <text class="dg-sub" x="540" y="165" text-anchor="middle">…</text>
-      </g>
-      <g id="io-combine" opacity="0">
-        <path class="dg-arrow" d="M250,120 L374,120" marker-end="url(#io-ah)"/><text class="dg-sub" x="200" y="124" text-anchor="middle">smaller amt</text>
-        <path class="dg-arrow" d="M250,160 L374,160" marker-end="url(#io-ah)"/><text class="dg-sub" x="200" y="164" text-anchor="middle">smaller amt</text>
-      </g>
-      <g id="io-split" opacity="0">
-        <path class="dg-arrow" d="M592,120 L716,120" marker-end="url(#io-ah)"/><text class="dg-sub" x="770" y="124" text-anchor="middle">payment</text>
-        <rect class="dg-key" x="490" y="144" width="100" height="32" rx="4"/><text class="dg-label" x="540" y="165" text-anchor="middle">Out</text>
-        <path class="dg-arrow" d="M592,160 L716,160" marker-end="url(#io-ah)"/><text class="dg-sub" x="770" y="164" text-anchor="middle">change</text>
-      </g>
-    </svg>
+  <div class="caption" style="border-top:none;border-bottom:1px solid var(--rule)"><span class="step-label">Build a transaction</span>You hold coins as whole <b>chunks</b>, not a running balance. Pick which to spend as <b>inputs</b>, set the payment, and watch the <b>change</b> and the miner's <b>fee</b> compute live.</div>
+  <div class="stage" style="padding:1.2rem 1.4rem">
+    <div class="io-build-controls">
+      <span class="exw-label" style="margin:0">spend coins:</span>
+      <span data-pick></span>
+      <span class="exw-label" style="margin:0 0 0 0.6rem">pay</span>
+      <input class="exw-input" data-pay type="number" min="0" step="0.1" value="1.5" style="width:5.5rem;margin:0"> BTC
+      <label style="margin:0 0 0 0.8rem;font-size:0.85rem">fee <b data-feev>0.01</b> BTC <input type="range" data-fee min="0" max="1" step="0.01" value="0.01" style="vertical-align:middle"></label>
+    </div>
+    <div data-txcard style="margin-top:1rem"></div>
   </div>
-  <figcaption class="caption"></figcaption>
-  <div class="controls"><button data-prev>← Prev</button><button data-next>Next →</button><button class="replay" data-replay>↺ Replay</button><div class="dots"></div></div>
 </figure>
 
 <p>It should be noted that fan-out, where a transaction depends on several transactions, and those transactions depend on many more, is not a problem here. There is never the need to extract a complete standalone copy of a transaction's history.</p>
@@ -540,7 +523,6 @@ q=0.45   z=340</code></pre>
 <script src="assets/explainers/gamblers-ruin.js"></script>
 <script src="assets/explainers/longest-chain.js"></script>
 <script src="assets/explainers/incentive.js"></script>
-<script src="assets/explainers/inputs-outputs.js"></script>
 <script src="assets/explainers/one-cpu-one-vote.js"></script>
 <script src="assets/explainers/mint.js"></script>
 <script src="assets/explainer-panel.js"></script>
@@ -676,23 +658,79 @@ Explorable.stepper({
   }
 });
 
-// ── §9 inputs/outputs ──
-Explorable.stepper({
-  root: '#fig-io',
-  steps: [
-    { label: 'A transaction', text: 'A transaction is a box with <b>inputs</b> on the left and <b>outputs</b> on the right — value flows through it.' },
-    { label: 'Combine inputs', text: 'Multiple inputs combine smaller amounts from previous transactions into one spend — like gathering coins from a jar.' },
-    { label: 'Split into outputs', text: 'Outputs split the value: typically one for the <b>payment</b> and one returning the <b>change</b> back to the sender. At most two, usually.' }
-  ],
-  build: function (gsap) {
-    gsap.set(['#io-combine','#io-split'], { opacity: 0 });
-    var tl = gsap.timeline({ defaults: { ease: 'power2.out', duration: 0.5 } });
-    tl.addLabel('s0');
-    tl.to('#io-combine', { opacity: 1 }); tl.addLabel('s1');
-    tl.to('#io-split', { opacity: 1 }); tl.addLabel('s2');
-    return tl;
+// ── §9 inputs/outputs — interactive build-a-transaction ──
+(function () {
+  var root = document.getElementById('fig-io');
+  if (!root) return;
+  function fmt(n) { return (Math.round(n * 1e8) / 1e8).toString(); }
+  // Coins you already own (each is an output of some earlier transaction).
+  var state = {
+    chunks: [{ amt: 5, sel: true }, { amt: 2, sel: false }, { amt: 0.5, sel: false }],
+    payment: 1.5,
+    fee: 0.01
+  };
+  var pickEl = root.querySelector('[data-pick]');
+  var payIn = root.querySelector('[data-pay]');
+  var feeIn = root.querySelector('[data-fee]');
+  var feeVal = root.querySelector('[data-feev]');
+  var cardEl = root.querySelector('[data-txcard]');
+
+  function renderPick() {
+    pickEl.innerHTML = state.chunks.map(function (c, i) {
+      return '<button class="exw-chunk pick' + (c.sel ? ' sel' : '') + '" data-chunk="' + i + '">' +
+        (c.sel ? '✓ ' : '') + fmt(c.amt) + '</button>';
+    }).join('');
+    Array.prototype.forEach.call(pickEl.querySelectorAll('[data-chunk]'), function (b) {
+      b.addEventListener('click', function () {
+        var i = +b.getAttribute('data-chunk');
+        state.chunks[i].sel = !state.chunks[i].sel;
+        renderPick(); renderTx();
+      });
+    });
   }
-});
+
+  // The transaction card: inputs → outputs, with change + fee + validity.
+  function txHtml() {
+    var ins = state.chunks.filter(function (c) { return c.sel; });
+    var inTotal = ins.reduce(function (s, c) { return s + c.amt; }, 0);
+    var pay = state.payment, fee = state.fee;
+    var change = inTotal - pay - fee;
+    var valid = ins.length > 0 && pay > 0 && change >= -1e-9;
+    var inHtml = ins.length
+      ? ins.map(function (c) { return '<div class="io-item in">' + fmt(c.amt) + ' BTC</div>'; }).join('')
+      : '<div class="io-item empty">no coins selected</div>';
+    var outHtml = '';
+    if (valid) {
+      outHtml += '<div class="io-item pay">' + fmt(pay) + ' BTC → payee</div>';
+      if (change > 1e-9) outHtml += '<div class="io-item change">' + fmt(change) + ' BTC → change (you)</div>';
+      outHtml += '<div class="io-fee">+ fee to miner: <b>' + fmt(fee) + ' BTC</b></div>';
+    } else {
+      outHtml = '<div class="io-item empty">—</div>';
+    }
+    var card =
+      '<div class="exw-txio">' +
+        '<div class="io-side"><div class="io-cap">INPUTS · ' + fmt(inTotal) + ' BTC</div>' + inHtml + '</div>' +
+        '<div class="io-eq">→</div>' +
+        '<div class="io-side"><div class="io-cap">OUTPUTS</div>' + outHtml + '</div>' +
+      '</div>';
+    var note;
+    if (!ins.length) note = '<div class="exw-result"><div><b>Select at least one coin to spend</b></div></div>';
+    else if (pay <= 0) note = '<div class="exw-result"><div><b>Enter a payment amount</b></div></div>';
+    else if (change < -1e-9) note = '<div class="exw-result bad"><div><b>✗ Inputs don\'t cover it</b><span class="small">' +
+      fmt(inTotal) + ' BTC selected, but payment + fee = ' + fmt(pay + fee) + ' BTC. Select another coin.</span></div></div>';
+    else note = '<div class="exw-result ok"><div><b>✓ Valid: ' + fmt(inTotal) + ' = ' + fmt(pay) + ' (pay) + ' +
+      fmt(change) + ' (change) + ' + fmt(fee) + ' (fee)</b><span class="small">Inputs are spent whole; the change returns to you as a new output, and the leftover is the fee.</span></div></div>';
+    return card + note;
+  }
+
+  function renderTx() { cardEl.innerHTML = txHtml(); }
+
+  payIn.addEventListener('input', function () { state.payment = parseFloat(payIn.value) || 0; renderTx(); });
+  feeIn.addEventListener('input', function () { state.fee = parseFloat(feeIn.value) || 0; feeVal.textContent = state.fee.toFixed(2); renderTx(); });
+
+  renderPick();
+  renderTx();
+})();
 
 // ── §10 privacy model toggle ──
 (function () {
