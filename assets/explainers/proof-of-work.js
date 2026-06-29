@@ -151,6 +151,7 @@
                 '<button class="exw-btn verify" data-mine>⛏ Mine this block</button>' +
                 '<button class="exw-btn danger" data-stop disabled>Stop</button>' +
               '</div>' +
+              '<div class="small" style="margin-top:0.6rem;color:var(--muted)">Deliberately slowed so you can watch the count climb — real hardware does millions of these hashes a second.</div>' +
             '</div>' +
             '<div data-r3></div>' +
           '</div>' +
@@ -253,7 +254,7 @@
             state.mined = { nonce: nonce, hash: h, attempts: attempts, D: state.D };
             var ms = Date.now() - t0;
             r3El.innerHTML = '<div class="exw-result ok"><div><b>✓ Block mined</b>' +
-              '<span class="small">Winning nonce <b>' + nonce + '</b> after <b>' + attempts.toLocaleString() + '</b> hashes (' + ms + ' ms).</span>' +
+              '<span class="small">Winning nonce <b>' + nonce + '</b> after <b>' + attempts.toLocaleString() + '</b> hashes (' + (ms / 1000).toFixed(1) + 's at this slowed pace).</span>' +
               '<div class="exw-hashbig" style="margin-top:0.4rem">' + hashHtml(h, state.D) + '</div></div></div>';
             return;
           }
