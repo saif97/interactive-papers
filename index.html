@@ -331,14 +331,23 @@
 <figure class="explorable" id="fig-io">
   <div class="caption" style="border-top:none;border-bottom:1px solid var(--rule)"><span class="step-label">Build a transaction</span>You hold coins as whole <b>chunks</b>, not a running balance. Pick which to spend as <b>inputs</b>, set the payment, and watch the <b>change</b> and the miner's <b>fee</b> compute live.</div>
   <div class="stage" style="padding:1.2rem 1.4rem">
-    <div class="io-build-controls">
-      <span class="exw-label" style="margin:0">spend coins:</span>
-      <span data-pick></span>
-      <span class="exw-label" style="margin:0 0 0 0.6rem">pay</span>
-      <input class="exw-input" data-pay type="number" min="0" step="0.1" value="1.5" style="width:5.5rem;margin:0"> BTC
-      <label style="margin:0 0 0 0.8rem;font-size:0.85rem">fee <b data-feev>0.01</b> BTC <input type="range" data-fee min="0" max="1" step="0.01" value="0.01" style="vertical-align:middle"></label>
+    <div class="io-controls">
+      <div class="io-field">
+        <span class="exw-label">Coins you own — click to spend</span>
+        <span class="exw-chunks" data-pick></span>
+      </div>
+      <div class="io-ctl-inline">
+        <div class="io-field">
+          <span class="exw-label">Pay</span>
+          <span class="io-num"><input class="exw-input" data-pay type="number" min="0" step="0.1" value="1.5"><span class="io-unit">BTC</span></span>
+        </div>
+        <div class="io-field io-field-fee">
+          <span class="exw-label">Miner fee — <b data-feev>0.01</b> BTC</span>
+          <input type="range" data-fee min="0" max="1" step="0.01" value="0.01">
+        </div>
+      </div>
     </div>
-    <div data-txcard style="margin-top:1rem"></div>
+    <div data-txcard style="margin-top:1.2rem"></div>
   </div>
 </figure>
 
@@ -678,7 +687,7 @@ Explorable.stepper({
   function renderPick() {
     pickEl.innerHTML = state.chunks.map(function (c, i) {
       return '<button class="exw-chunk pick' + (c.sel ? ' sel' : '') + '" data-chunk="' + i + '">' +
-        (c.sel ? '✓ ' : '') + fmt(c.amt) + '</button>';
+        (c.sel ? '✓ ' : '') + fmt(c.amt) + ' BTC</button>';
     }).join('');
     Array.prototype.forEach.call(pickEl.querySelectorAll('[data-chunk]'), function (b) {
       b.addEventListener('click', function () {

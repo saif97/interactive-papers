@@ -411,7 +411,17 @@ th { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.08em; text-
 .exw-txio .io-item.change { border-left: 3px solid var(--good); }
 .exw-txio .io-item.empty { color: var(--muted); background: none; }
 .exw-txio .io-fee { font-family: var(--mono); font-size: 0.74rem; color: var(--accent); margin-top: 0.4rem; }
-.exw-txio .io-eq { display: flex; align-items: center; font-family: var(--mono); color: var(--muted); }
+.exw-txio .io-eq { display: flex; align-items: center; justify-content: center; font-size: 1.4rem; color: var(--muted); min-width: 1.4rem; }
+/* §9 build-a-transaction controls: each input on its own labelled row. */
+.io-controls { display: flex; flex-direction: column; gap: 1rem; }
+.io-ctl-inline { display: flex; flex-wrap: wrap; gap: 1rem 2rem; align-items: flex-end; }
+.io-field { display: flex; flex-direction: column; }
+.io-field .exw-label { margin-bottom: 0.4rem; }
+.io-num { display: inline-flex; align-items: center; gap: 0.4rem; }
+.io-num .exw-input { width: 5rem; margin: 0; }
+.io-num .io-unit { font-family: var(--mono); font-size: 0.82rem; color: var(--muted); }
+.io-field-fee { flex: 1; min-width: 13rem; }
+.io-field-fee input[type=range] { width: 100%; margin: 0; }
 
 /* Explorable diagram frame + stepper */
 .explorable {
