@@ -86,12 +86,9 @@
   var DATA = 'Alice → Bob: 5 · Carol → Dan: 2';
   function blockStr(nonce) { return PREV + '|' + DATA + '|nonce=' + nonce; }
 
-  // Difficulty presets, in leading zero hex digits. ~16^D tries on average.
-  var LEVELS = [
-    { d: 2, name: 'Easy', tries: '~256 tries' },
-    { d: 3, name: 'Medium', tries: '~4,000 tries' },
-    { d: 4, name: 'Hard', tries: '~65,000 tries' }
-  ];
+  // Difficulty options for the dropdown, in leading zero hex digits.
+  // ~16^D tries on average — each extra zero is 16x more work.
+  var DIFFS = [1, 2, 3, 4, 5];
 
   // Render a hash with its leading zero run colored: green if it meets D, amber if not.
   function hashHtml(hex, D) {
@@ -120,8 +117,11 @@
           // Step 1 — the target
           '<div class="exw-step" data-step>' +
             '<h3>1 · The rule: the hash must start with zeros</h3>' +
-            '<p>A block counts as valid only if its hash begins with a set number of <b>0</b>s. More required zeros means a smaller share of hashes qualify, so it takes more guessing to land one. That required count is the <b>difficulty</b>. Pick one:</p>' +
-            '<div class="exw-row" style="flex-wrap:wrap;gap:0.4rem;justify-content:flex-start" data-levels></div>' +
+            '<p>A block counts as valid only if its hash begins with a set number of <b>0</b>s. More required zeros means a smaller share of hashes qualify, so it takes more guessing to land one. That required count is the <b>difficulty</b>. Set it here:</p>' +
+            '<div class="exw-row" style="gap:0.5rem;align-items:center;justify-content:flex-start">' +
+              '<label style="font-size:0.85rem;display:inline-flex;align-items:center;gap:0.5rem">Leading zeros required:' +
+                '<select class="exw-input" data-diff style="margin:0;max-width:6rem"></select></label>' +
+            '</div>' +
             '<div class="exw-note" style="margin-top:0.8rem" data-target></div>' +
           '</div>' +
 
@@ -189,28 +189,22 @@
       nextBtn.addEventListener('click', function () { show(cur + 1); });
       show(0);
 
-      // ── step 1: difficulty picker ──
-      var levelsEl = panel.querySelector('[data-levels]');
+      // ── step 1: difficulty dropdown ──
+      var diffEl = panel.querySelector('[data-diff]');
       var targetEl = panel.querySelector('[data-target]');
-      levelsEl.innerHTML = LEVELS.map(function (lv) {
-        return '<button class="exw-btn ghost" data-lv="' + lv.d + '">' + lv.name + ' · ' + lv.d + ' zeros</button>';
+      diffEl.innerHTML = DIFFS.map(function (d) {
+        return '<option value="' + d + '"' + (d === state.D ? ' selected' : '') + '>' + d + ' zero' + (d > 1 ? 's' : '') + '</option>';
       }).join('');
       function renderTarget() {
-        var lv = LEVELS.filter(function (x) { return x.d === state.D; })[0];
+        var expected = Math.pow(16, state.D);
         targetEl.innerHTML = 'Target: the hash must start with <b>' + state.D + '</b> zero' + (state.D > 1 ? 's' : '') +
           ' (<span class="exw-mono">' + new Array(state.D + 1).join('0') + '…</span>). ' +
-          'Only about 1 in 16^' + state.D + ' hashes qualifies, so expect <b>' + lv.tries + '</b> before one does.';
-        Array.prototype.forEach.call(levelsEl.querySelectorAll('[data-lv]'), function (b) {
-          var on = +b.getAttribute('data-lv') === state.D;
-          b.classList.toggle('verify', on); b.classList.toggle('ghost', !on);
-        });
+          'Only about 1 in <b>' + expected.toLocaleString() + '</b> hashes qualifies, so expect roughly that many tries before one lands.';
       }
-      Array.prototype.forEach.call(levelsEl.querySelectorAll('[data-lv]'), function (b) {
-        b.addEventListener('click', function () {
-          state.D = +b.getAttribute('data-lv');
-          state.mined = null;            // a new target invalidates the old proof
-          renderTarget(); renderGuess(); resetMine(); renderVerify();
-        });
+      diffEl.addEventListener('change', function () {
+        state.D = +diffEl.value;
+        state.mined = null;            // a new target invalidates the old proof
+        renderTarget(); renderGuess(); resetMine(); renderVerify();
       });
 
       // ── step 2: manual nonce ──
@@ -244,10 +238,12 @@
           r3El.innerHTML = '<div class="exw-result bad"><div><b>Stopped</b><span class="small">Gave up after ' + attempts.toLocaleString() + ' attempts.</span></div></div>';
           return;
         }
-        // Hash a small batch per tick, then yield with a short delay, so the
-        // attempt counter visibly climbs instead of jumping to the answer —
-        // the grind reads as real work. Hashing is still real SHA-256.
-        var budget = 10;
+        // Hash a batch per tick, then yield with a short delay, so the attempt
+        // counter visibly climbs instead of jumping to the answer — the grind
+        // reads as real work. Hashing is still real SHA-256. The batch scales
+        // with difficulty (~16^D expected tries) so every setting stays
+        // watchable (~1-10s) rather than crawling for minutes at 5 zeros.
+        var budget = Math.max(10, Math.round(Math.pow(16, state.D) / 1170));
         while (budget-- > 0) {
           var h = sha256hex(blockStr(nonce));
           attempts++;
