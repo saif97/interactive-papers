@@ -115,6 +115,21 @@ th { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.08em; text-
 .paper-toc a.active { color: var(--accent); font-weight: 600; }
 .paper-toc .toc-head { color: var(--accent); letter-spacing: 0.12em; text-transform: uppercase; font-size: 0.66rem; margin-bottom: 0.4rem; }
 @media (max-width: 1180px) { .paper-toc { display: none; } }
+
+/* Always-visible "Fork on GitHub" badge, pinned to the top-right corner. */
+.gh-badge {
+  position: fixed; top: 1.1rem; right: 1.1rem; z-index: 50;
+  display: inline-flex; align-items: center; gap: 0.45rem;
+  font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.03em;
+  color: var(--ink); background: #fff;
+  border: 1px solid var(--rule); border-radius: 999px;
+  padding: 0.42rem 0.8rem; box-shadow: 0 1px 4px rgba(0,0,0,0.09);
+  transition: border-color 0.12s, color 0.12s, box-shadow 0.12s;
+}
+.gh-badge:hover { border-color: var(--accent); color: var(--accent); box-shadow: 0 2px 8px rgba(0,0,0,0.13); }
+.gh-badge svg { width: 15px; height: 15px; fill: currentColor; }
+@media (max-width: 480px) { .gh-badge .gh-text { display: none; } .gh-badge { padding: 0.5rem; } }
+@media print { .gh-badge { display: none; } }
 .paper-section { scroll-margin-top: 1.5rem; }
 
 
